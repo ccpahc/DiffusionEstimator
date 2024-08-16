@@ -39,3 +39,16 @@ codegen/
 
 # Octave session info
 octave-workspace
+
+# ignore data files
+*.mat
+*.xls
+*.xlsx
+*.nc
+
+# ignore all images
+*.png
+*.jpg
+*.pdf
+*.gif
+*.fig
