@@ -21,7 +21,7 @@ DESCRIPTION OF PROCESS
 clear
 clc
 
-delta = 1/4;
+delta = 1/2;
 
 clearvars -except delta
 

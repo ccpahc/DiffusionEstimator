@@ -1,4 +1,4 @@
-function [A_av, error_av] = run_model(n, A_start, nt, theta, X, data)
+function [A_av, error_av] = run_model_sparse(n, A_start, nt, theta, X, data)
     % Initialize the accumulators
     A_av = zeros(size(A_start));
     error_sum = 0;
@@ -43,10 +43,12 @@ function [a, f_x, f_y] = step(a, theta, X, f_x, f_y)
 
     f_x(f(adopt)) = 0;
     f_y(f(adopt)) = 0;
+    [rows, columns] = ind2sub(size(a),f(adopt));
 
-    for i=1:length(adopt)
+    for i=1:length(f(adopt))
         [size_x,size_y] = size(a);
-        [r,c] = ind2sub(size(a),f(adopt(i)));
+        r = rows(i);
+        c = columns(i);
         if r > 1
             if a(r-1,c) == 0
                 f_x(r-1,c) = f_x(r-1,c)+0.5;

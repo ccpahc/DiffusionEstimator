@@ -10,7 +10,7 @@ function plot_map(A, R, pinhasi, pinhasi_active, land, errors)
     axis xy
 
     % color map with A
-    geoshow(sum(A,3), R, 'DisplayType', 'texturemap')
+    % geoshow(sum(A,3), R, 'DisplayType', 'texturemap')
     %make sea white
     geoshow(fliplr([land.Lat]),fliplr([land.Lon]),'DisplayType', ...
         'Polygon', 'FaceColor', 'white', 'FaceAlpha', 0.5)
@@ -19,24 +19,24 @@ function plot_map(A, R, pinhasi, pinhasi_active, land, errors)
     [size_x size_y size_t] = size(A);
     predictions = size_t - pinhasi_active(:,3);
     
-    norm_errors = (errors - min(errors))/(max(errors) - min(errors));
-    cmap = colormap(flip(pink));
-    num_colors = size(cmap,1);
-    color_indices = round(norm_errors * (num_colors - 1)) + 1;
-    colors = cmap(color_indices,:);
+    % Define the three colors (RGB format):
+    color1 = [23/255, 42/255, 80/255];   % Blue
+    color2 = [235/255, 232/255, 198/255];   % White
+    color3 = [80/255, 13/255, 23/255];   % Red
 
-    colormap(parula)
+    % Number of points in your colormap:
+    numColors = 256; 
+
+    % Create a colormap by interpolating between these colors:
+    cmap = interp1([1, 128, 256], [color1; color2; color3], linspace(1, 256, numColors));
+
+    colormap(cmap)
     % Loop over each point and plot with the corresponding color
-    for i = 1:length(pinhasi.lat)
-        geoshow(pinhasi.lat(i), pinhasi.lon(i), 'DisplayType', 'point', ...
-            'Marker', 'o', 'MarkerEdgeColor', 'none', ...
-            'MarkerFaceColor', colors(i,:), 'MarkerSize', 5);
-    end
-    % plot error histogram
-    figure
-    histogram(errors)
-    title('Error histogram')
-    xlabel('Error')
-    ylabel('Frequency')
-    fprintf('Elapsed time: %.2f seconds\n', toc);
+    scatterm(pinhasi.lat, pinhasi.lon, 10, errors, 'filled');
+    cb = colorbar;
+    ylabel(cb,'t_{data} - t_{sim} (years)','FontSize',16);
+    max_abs_value = max(abs(errors(:)));
+    clim([-max_abs_value, max_abs_value]);
+
+
 end

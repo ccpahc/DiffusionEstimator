@@ -3,7 +3,7 @@ clc
 % Add the directory containing run_model.m to the MATLAB path
 addpath('src');
 
-d = 22.5; % distance between two cells
+d = 2*22.5; % distance between two cells CHANGE TO 100
 gamma = 10; % km per decade
 diff_speed = gamma / d ; % diffusion speed in cells per year
 
@@ -27,6 +27,14 @@ idx = find(pinhasi.bp == min(pinhasi.bp));
 topleft = [60, -17.19];
 bottomright = [15, 65.07];
 
+skip = 2;
+
+lat = lat(1, 1:skip:end);
+lon = lon(1,1:skip:end);
+latmtx = latmtx(1:skip:end,1:skip:end);
+lonmtx = lonmtx(1:skip:end,1:skip:end);
+csidata = csidata(1:skip:end,1:skip:end);
+
 latidx = lat <= topleft(1) & lat >= bottomright(1);
 lonidx = lon >= topleft(2) & lon <= bottomright(2);
 
@@ -38,7 +46,7 @@ lonp = lon(lonidx);
 
 %% define simulation array
 
-dt = 10; % time step in years
+dt = 20; % time step in years
 start_time = floor(min(pinhasi.bp)/dt)*dt;
 end_time = ceil(max(pinhasi.bp)/dt)*dt + 1000; % add 1000 years to end_time
 T = round((end_time - start_time)/dt + 1);
@@ -65,24 +73,28 @@ A(pinhasi_active(earliest_event,1), pinhasi_active(earliest_event,2), 1) = true;
 terrain = csidata(latidx, lonidx);
 terrain = terrain./max(max(terrain));
 
-% theta(1) - average diffusion speed N-S
-% theta(2) - average diffusion speed E-W
+% theta(1) - average diffusion speed E-W
+% theta(2) - average diffusion speed N-S
 % theta(3) - contribution of terrain (b1)
-terrain_theta = 0;
-x_theta = 0.01;
-y_theta = 0.5;
-ns = [1 10 20 40 60 80 100];
-durations = zeros(length(ns),1);
-for t=1:length(ns)
-    % theta0 = [0.25 2 0.1];
-    theta = [x_theta y_theta terrain_theta];
-    tic
+terrain_theta = [0.0];
+x_theta = [0.5];
+y_theta = [0.2];
+errors = zeros(length(terrain_theta),length(x_theta),length(y_theta));
+final_As = zeros(length(terrain_theta),length(x_theta),length(y_theta),length(latp),length(lonp));
 
-    [A,error] = run_model(ns(t), A, T, theta, terrain, pinhasi_active);
-    disp(error)
+for xi = 1:length(x_theta)
+    for yi = 1:length(y_theta)
+        for ti = 1:length(terrain_theta)
+            theta = [x_theta(xi) y_theta(yi) terrain_theta(ti)];
+            [A,error] = run_model(20, A, T, theta, terrain, pinhasi_active);
+            errors(ti,xi,yi) = error;
+            final_As(ti,xi,yi,:,:) = sum(A,3);
+            disp(['x: ', num2str(xi), ' y: ', num2str(yi), ' t: ', num2str(ti)]);
+            disp(['error: ', num2str(sqrt(error))]);
+        end
+    end
 
-    durations(t) = toc;
-    disp(durations(t)) 
+ 
     %output theta as table
 
     % make figure
