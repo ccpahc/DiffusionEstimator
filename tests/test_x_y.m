@@ -1,9 +1,13 @@
 clear
 clc
 
-function error = optimize_model(theta, A, T, terrain, pinhasi_active)
+function error = optimize_model(theta, parameters)
     % Call run_model with the given theta
-    theta = [theta(1) theta(2) 0];
+    
+    A = parameters.A;
+    terrain = parameters.terrain;
+    pinhasi_active = parameters.pinhasi_dataset;
+    T = parameters.T;
     [~, error] = run_model(20, A, T, theta, terrain, pinhasi_active);
 
 end
@@ -15,92 +19,36 @@ if true
     addpath('src');
     rng(12) % set random seed
 
-    d = 22.5; % distance between two cells
-    gamma = 10; % km per decade
-    diff_speed = gamma / d ; % diffusion speed in cells per year
+    parameters = data_prep();
+    % data prep creates parameters struct with the following fields:
+    % parameters.A - initial matrix
+    % parameters.T - number of time steps
+    % parameters.terrain - terrain data
+    % parameters.pinhasi_dataset - matrix storing x,y,t coordinates of pinhasi sites
+    % parameters.dt - time step in years
+    % parameters.start_time - start time
+    % parameters.end_time - end time
+    % parameters.lat - first and last latitude
+    % parameters.lon - first and last longitude
 
-    % load build
-    load('data/prep/geography.mat');
-
-    % load pinhasi
-    pinhasi = readtable( ...
-        'data/raw/pinhasi/Neolithic_timing_Europe_PLOS.xls');
-
-    pinhasi = pinhasi(pinhasi.Var1 == "SITE",:); %% keep only site rows
-
-    pinhasi = renamevars(pinhasi, {'Latitude', 'Longitude', 'CALC14BP'}, ...
-        {'lat', 'lon', 'bp'});
-
-    pinhasi = pinhasi(:,{'lat', 'lon', 'bp'});
-    pinhasi.bp = 2000 - pinhasi.bp; % from BP to year
-    idx = find(pinhasi.bp == min(pinhasi.bp));
-
-    % restrict to Europe/Iran range
-    topleft = [60, -17.19];
-    bottomright = [15, 65.07];
     
-    skip = 2;
-    
-    lat = lat(1, 1:skip:end);
-    lon = lon(1,1:skip:end);
-    latmtx = latmtx(1:skip:end,1:skip:end);
-    lonmtx = lonmtx(1:skip:end,1:skip:end);
-    csidata = csidata(1:skip:end,1:skip:end);
-
-    latidx = lat <= topleft(1) & lat >= bottomright(1);
-    lonidx = lon >= topleft(2) & lon <= bottomright(2);
-
-    latp = lat(latidx);
-    lonp = lon(lonidx);
-
-    [~, index_x] = min(abs(latp - pinhasi.lat(idx)));
-    [~, index_y] = min(abs(lonp - pinhasi.lon(idx)));
-
-    %% define simulation array
-
-    dt = 20; % time step in years
-    start_time = floor(min(pinhasi.bp)/dt)*dt;
-    end_time = ceil(max(pinhasi.bp)/dt)*dt + 5000; % add 5000 years to end_time
-    T = round((end_time - start_time)/dt + 1);
-
-    times = start_time:dt:end_time;
-
-    % create matrix storing x,y,t coordinates of pinhasi sites
-    pinhasi_active = zeros(length(pinhasi.lat),3);
-    for event_index = 1:length(pinhasi.lat)
-        lat_event = pinhasi.lat(event_index);
-        lon_event = pinhasi.lon(event_index);
-        [~, index_x] = min(abs(latp - lat_event));
-        [~, index_y] = min(abs(lonp - lon_event));
-        [~, index_t] = min(abs(times - pinhasi.bp(event_index)));
-        pinhasi_active(event_index,:) = [index_x, index_y, index_t];
-    end
-
-    % initialize A
-    A = false(length(latp), length(lonp), T);
-    % find event in pinhasi_active with the earliest time
-    [~, earliest_event] = min(pinhasi_active(:,3));
-    A(pinhasi_active(earliest_event,1), pinhasi_active(earliest_event,2), 1) = true;
-
-    terrain = csidata(latidx, lonidx);
-    terrain = terrain./max(max(terrain));
 
     % theta(1) - average diffusion speed E-W
     % theta(2) - average diffusion speed N-S
     % theta(3) - contribution of terrain (b1)
 
-    objective_function = @(theta) optimize_model(theta, A, T, terrain, pinhasi_active);
+    objective_function = @(theta) optimize_model(theta,parameters);
 
     % initial guess
-    theta0 = [0.2 0.2];
+    theta0 = [0.01 0.01 0.01];
 
     options = optimoptions('fminunc', ...
         'Display', 'iter', ...
         "PlotFcn","optimplotx", ...
         'Algorithm', 'quasi-newton', ...
         'FiniteDifferenceType', 'central', ...
-        'StepTolerance', 1e-6, ...,
-        "FiniteDifferenceStepSize", 1e-4, ...,
+        'StepTolerance', 1e-18, ...,
+        "FiniteDifferenceStepSize", 2e-5, ...,
         "UseParallel", true);
 
     tic
@@ -108,8 +56,8 @@ if true
     [theta, fval, exitflag, output, grad, hessian] = fminunc(objective_function, theta0, options);
     disp("Elapsed time: " + toc + " seconds");
 
-    theta = [theta(1) theta(2) 0];
-    [A,error] = run_model(20, A, T, theta, terrain, pinhasi_active);
+
+    [A,error] = run_model(20, parameters.A, parameters.T, theta, parameters.terrain, parameters.pinhasi_dataset);
 
     % Output the results
     disp('Optimized Parameters:');
@@ -117,24 +65,10 @@ if true
 
     disp('Error:');
     disp(error);
+    
+    errors = calculate_error(A, parameters.pinhasi_dataset, "full")*parameters.dt;
 
-    % make figure
-    pinhasimtx = zeros(length(latp),length(lonp));
-    [~, index_x] = min(abs(latp - pinhasi.lat(idx)));
-    [~, index_y] = min(abs(lonp - pinhasi.lon(idx)));
-    pinhasimtx(index_x,index_y) = 1; 
-
-    land = shaperead('landareas.shp', 'UseGeoCoords', true);
-
-    R = georefcells([latp(1) latp(end)], [lonp(1) lonp(end)], ...
-        size(pinhasimtx));
-
-    errors = calculate_error(A, pinhasi_active, "full")*dt;
-
-
-    plot_map(A, R, pinhasi, pinhasi_active, land, errors);
-
-
+    plot_map(parameters, errors);
     figure(3)
     hold on;
     histogram(errors)

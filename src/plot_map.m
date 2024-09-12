@@ -1,4 +1,10 @@
-function plot_map(A, R, pinhasi, pinhasi_active, land, errors)
+function plot_map(parameters,errors)
+    A = parameters.A;
+    pinhasi_active = parameters.pinhasi_dataset;
+    land = shaperead('landareas.shp', 'UseGeoCoords', true);
+
+    R = georefcells(parameters.lat, parameters.lon, ...
+        size(parameters.terrain));
     loc = 10;
     fwidth = 20;
     tic
@@ -31,8 +37,9 @@ function plot_map(A, R, pinhasi, pinhasi_active, land, errors)
     cmap = interp1([1, 128, 256], [color1; color2; color3], linspace(1, 256, numColors));
 
     colormap(cmap)
+
     % Loop over each point and plot with the corresponding color
-    scatterm(pinhasi.lat, pinhasi.lon, 10, errors, 'filled');
+    scatterm(parameters.pinhasi_lat, parameters.pinhasi_lon, 10, errors, 'filled');
     cb = colorbar;
     ylabel(cb,'t_{data} - t_{sim} (years)','FontSize',16);
     max_abs_value = max(abs(errors(:)));

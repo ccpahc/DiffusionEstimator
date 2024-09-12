@@ -41,7 +41,7 @@ function a = step(a, theta, X)
     % theta(2) - average diffusion speed N-S
     % theta(3) - contribution of terrain (b1)
 
-    M = theta(1) * (Fn+Fs)/2 + theta(2) * (Fe+Fw)/2 + theta(3) * F .* X;
+    M = theta(1) * (Fn+Fs) + theta(2) * (Fe+Fw) + theta(3) * F .* X;
     % M = abs(theta(1)) .* (cx * (Fe+Fw)/2 + cy * (Fn+Fs)/2) + theta(3) * F .* X;
     f = find(M); % indices of frontier cells
 
