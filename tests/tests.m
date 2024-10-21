@@ -1,81 +1,86 @@
 % save("sweep_1_avg_dt_20.mat", "errors", "terrain_theta", "x_theta", "y_theta",'final_As');
 
-load("sweep_results_ratio_no_chatter_20_avs.mat")
-all_errors = all_errors .^2;
-dt = 20;
+load("pinhasi_dataset_theta_0_1_2.mat")
+% load("pinhasi_sweep_with_exit_flags.mat")
 [min_error, min_error_idx] = min(all_errors(:));
-[av_idx, r_idx, terrain_idx] = ind2sub(size(all_errors), min_error_idx);
+[idx_0, idx_1, idx_2] = ind2sub(size(all_errors), min_error_idx);
 
-theory_theta = [0.3, 0.3, 0.0];
-theory_av = theory_theta(1);
-theory_r = theory_theta(2)/theory_theta(1);
-theory_terrain = theory_theta(3);
+%% Error landscape and gradient
 
-% find closes indexes to theory values
-[~, theory_av_idx] = min(abs(av_theta - theory_av));
-[~, theory_r_idx] = min(abs(r_theta - theory_r));
-theory_terrain_idx = 1;
-
-sqrt(all_errors(theory_av_idx, theory_r_idx, theory_terrain_idx))
-
-[X,Y] = meshgrid(av_theta,log10(r_theta));
-
-% Define the three colors (RGB format):
-color1 = [23/255, 42/255, 80/255];   % Blue
-color2 = [235/255, 232/255, 198/255];   % White
-color3 = [80/255, 13/255, 23/255];   % Red
-
-% Number of points in your colormap:
-numColors = 256; 
-
-% Create a colormap by interpolating between these colors:
-cmap = interp1([1, 256], [color2; color3], linspace(1, 256, numColors));
-
-colormap(parula)
-
-figure(1)
-pcolor(X,Y,squeeze(all_errors)')
-colorbar;
-ylabel("log(ratio)")
-xlabel("average diffusion speed")
-% plot point with lowest error in red
-hold on
-plot(av_theta(av_idx), log10(r_theta(r_idx)), 'r*', 'MarkerSize',10)
-% add text box with error value next to point with white background
-annotation('textbox', [0.42 0.46 0.1 0.1], 'String', sprintf('error^{1/2} = %f', sqrt(min_error)), 'EdgeColor', 'none', 'BackgroundColor', 'white', 'HorizontalAlignment', 'center', 'FontSize', 14);
-max_abs_value = 1000;%max(abs(all_grad(:)))/20;
-clim([0, max_abs_value]);
-
-figure(2)
-% plot magnitude of gradient of error in the first 2 dimensions
-[all_grad_x, all_grad_y] = gradient(squeeze(all_errors));
-all_grad = sqrt(all_grad_x.^2 + all_grad_y.^2);
-pcolor(X,Y,all_grad')
-colormap(cmap)
-xlabel("average diffusion speed")
-ylabel("ratio")
-c = colorbar;
-c.Label.String = 'magnitude of gradient of error';
-max_abs_value = 100;%max(abs(all_grad(:)))/20;
-clim([0, max_abs_value]);
-
-colorbar;
+if false
+    dt = 20;
+    all_errors = all_errors/dt;
+    
+    
+    [X,Y] = meshgrid(theta_0,theta_1);
+    
+    % Define the three colors (RGB format):
+    color1 = [23/255, 42/255, 80/255];   % Blue
+    color2 = [235/255, 232/255, 198/255];   % White
+    color3 = [80/255, 13/255, 23/255];   % Red
+    
+    % Number of points in your colormap:
+    numColors = 256; 
+    
+    % Create a colormap by interpolating between these colors:
+    cmap = interp1([1, 256], [color2; color3], linspace(1, 256, numColors));
+    cmap = interp1([1, 128, 256], [color1; color2; color3], linspace(1, 256, numColors));
+    colormap(parula)
+    f = flag_1+flag_2;
+    v = [0.2,0.2];
+    ind = 7;
+    figure(1)
+    hold on;
+    pcolor(X,Y,squeeze(all_errors(:,:,ind))')
+    contour(X,Y,squeeze(f(:,:,ind))',v,'ShowText','on')
+    colorbar;
+    ylabel("y theta")
+    xlabel("x theta")
+    % plot point with lowest error in red
+    hold on
+    plot(theta_0(idx_0), theta_2(idx_2), 'r*', 'MarkerSize',10)
+    % add text box with error value next to point with white background
+    annotation('textbox', [0.42 0.49 0.1 0.1], 'String', sprintf('error^{1/2} = %f', sqrt(min_error)*dt), 'EdgeColor', 'none', 'BackgroundColor', 'white', 'HorizontalAlignment', 'center', 'FontSize', 14);
+    max_abs_value = 5000;%max(abs(all_grad(:)))/20;
+    clim([min(all_errors(:)), max_abs_value]);
+    
+    figure(2)
+    % plot magnitude of gradient of error in the first 2 dimensions
+    [all_grad_x, all_grad_y] = gradient(squeeze(all_errors(:,1,:)));
+    all_grad = sqrt(all_grad_x.^2 + all_grad_y.^2);
+    % pcolor(X,Y,all_grad')
+    pcolor(X,Y,squeeze(flag_1(:,:,ind))')
+    colormap(cmap)
+    xlabel("average diffusion speed")
+    ylabel("ratio")
+    c = colorbar;
+    c.Label.String = 'magnitude of gradient of error';
+    max_abs_value = max(flag_1(:)-flag_2(:));
+    % clim([-1,1]);
+    colorbar;
+end
 
 %% ERROR GIF
-if false
+if true
     % Create a cell array to store the frames
     frames = cell(1, 10);
-
-    for i = 1:length(terrain_theta)
+    [X,Y] = meshgrid(theta_0,theta_1);
+    for i = 1:length(theta_2)
         % Plot contour plots of errors standardizing the errors
+       av_speed = 0.3;
+       theta_0_av = linspace(min(theta_0), max(theta_0),11);
+       theta_1_av = 0.3 - theta_2(i) - theta_0_av;
         figure
-        pcolor(y_theta, x_theta, dt*sqrt(squeeze(errors(i,:,:))));
+        hold on;
+        pcolor(X,Y,squeeze(all_errors(:,:,i))')
+        plot(theta_0_av,theta_1_av,'r');
         % clim([dt*min(errors(:)), dt*max(errors(:))]);
-        clim([dt*sqrt(min(errors(:))) 10000.0]);
-        xlabel('theta_x');    
-        ylabel('theta_y');
+        max_abs_value = 1.2e5;%max(abs(all_grad(:)))/20;
+        clim([min(all_errors(:)), max_abs_value]);
+        ylabel("theta_0")
+        xlabel("theta_1")
 
-        annotation('textbox', [0 0.9 1 0.1], 'String', sprintf('terrain = %s', string(terrain_theta(i))), 'EdgeColor', 'none', 'HorizontalAlignment', 'center', 'FontSize', 14);
+        annotation('textbox', [0 0.9 1 0.1], 'String', sprintf('terrain = %s', string(theta_2(i))), 'EdgeColor', 'none', 'HorizontalAlignment', 'center', 'FontSize', 14);
         % title(sprintf('terrain = %s', string(terrain_theta(i))));
         %add colorbar and label
         c = colorbar;
@@ -90,7 +95,7 @@ if false
 
     % Create a GIF file from the frames
     filename = '/Users/mperuzzo/Documents/repos/bottlenecks/tests/contour_plots_5_av_dt_20_downsampled.gif';
-    for i = 1:length(terrain_theta)
+    for i = 1:length(theta_2)
         % Convert the frame to an indexed image
         [frame_data, colormap] = rgb2ind(frames{i}.cdata, 256);
         

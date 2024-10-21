@@ -1,4 +1,4 @@
-function parameters = data_prep()
+function parameters = data_prep(n_averages)
 
     parameters = struct();
     % load build
@@ -39,12 +39,11 @@ function parameters = data_prep()
     csidata = csidata(latidx,lonidx);
     parameters.lat = [latp(1) latp(end)];
     parameters.lon = [lonp(1) lonp(end)];
-    
 
     % define time array
     parameters.dt = 20; % time step in years
     parameters.start_time = floor(min(pinhasi.bp)/parameters.dt)*parameters.dt;
-    parameters.end_time = ceil(max(pinhasi.bp)/parameters.dt)*parameters.dt + 5000; % add 5000 years to end_time
+    parameters.end_time = ceil(max(pinhasi.bp)/parameters.dt)*parameters.dt + 1000; % add 5000 years to end_time
     parameters.T = round((parameters.end_time - parameters.start_time)/parameters.dt + 1);
 
     parameters.times = parameters.start_time:parameters.dt:parameters.end_time;
@@ -64,9 +63,14 @@ function parameters = data_prep()
     % add terrain data
     parameters.terrain = csidata;
     parameters.terrain = parameters.terrain/max(parameters.terrain(:));
+    parameters.terrain = parameters.terrain-mean(parameters.terrain(:))/std(parameters.terrain(:));
 
     % initialize A
     parameters.A = false(length(latp), length(lonp), parameters.T);
     [~, earliest_event] = min(parameters.dataset_idx(:,3));
     parameters.A(parameters.dataset_idx(earliest_event,1), parameters.dataset_idx(earliest_event,2), 1) = true;
+    rng(12);
+    U = rand(length(latp), length(lonp), parameters.T, n_averages);
+    parameters.n = n_averages;
+    parameters.U = U(:,:,:,1:n_averages);
 end

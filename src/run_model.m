@@ -1,39 +1,58 @@
-function [A_av, error, arrival_times] = run_model(n, A_start, nt, theta, X, data, U)
+function result = run_model(parameters, theta)
+    result = struct();
+    A_start = parameters.A;
+    X = parameters.terrain;
+    data = parameters.dataset_idx;
     % Initialize the accumulators
     A_av = zeros(size(A_start));
     simulation_times = zeros(1,length(data));
+    U = parameters.U;
+    exitflag_1 = 0;
+    exitflag_2 = 0;
+    nt = parameters.T;
 
-    parfor rep = 1:n
+    parfor rep = 1:parameters.n
         % Run the model for each instance
-        A = run_model_av(A_start, nt, theta, X, U(:,:,:,rep));
+        [A, exfl1] = run_model_av(A_start, nt, theta, X, U(:,:,:,rep));
+        
         % calculate arrival times
-        times = calculate_times(A, data);
+        [times, exfl2] = calculate_times(A, data);
         A_av = A_av + double(A);  % Convert to double to accumulate          
         simulation_times = simulation_times + double(times)';
+        exitflag_1 = exitflag_1 + exfl1;
+        exitflag_2 = exitflag_2 + exfl2;
 
     end
 
     % Finalize the average
-    simulation_times = simulation_times / n;
-    A_av = A_av / n;
-    error = calculate_error(data, simulation_times, "squared");
-    if nargout > 2
-        arrival_times = simulation_times;
-    end
+    simulation_times = simulation_times / parameters.n;
+    A_av = A_av / parameters.n;
+
+    result.A = A_av;
+    result.times = simulation_times;
+    result.errors = calculate_error(data, simulation_times, "full");
+    result.squared_error = calculate_error(data, simulation_times, "squared");
+    result.exitflag_1 = exitflag_1/parameters.n;
+    result.exitflag_2 = exitflag_2/parameters.n;
+
 end
 
 
-function A = run_model_av(A_start, nt, theta, X, U)
+function [A, exitflag] = run_model_av(A_start, nt, theta, X, U)
     A = A_start;
     U = squeeze(U);
+    flag = 0;
     for t = 2:nt
-        [A(:,:,t)] = step(A(:,:,t-1), theta, X, U(:,:,t));
+        [extflg1, A(:,:,t)] = step(A(:,:,t-1), theta, X, U(:,:,t));
+        flag = flag + extflg1/nt;
     end
-
+    if nargout > 1
+        exitflag = flag;
+    end
 end
 
 
-function a = step(a, theta, X, U)
+function [exfl1,a] = step(a, theta, X, U)
     % a = sparse(a);
     %normalize c_x and c_y
     [Fn,Fs,Fw,Fe] = frontier(a); % find adjacent cells to currently activated ones
@@ -41,13 +60,17 @@ function a = step(a, theta, X, U)
     % theta(1) - average diffusion speed N-S
     % theta(2) - average diffusion speed E-W
     % theta(3) - contribution of terrain (b1)
-    M = theta(1) * (Fe|Fw) + theta(2) * (Fn|Fs) + theta(3) * F .* X;
-    % M = abs(theta(1)) .* (cx * (Fe+Fw)/2 + cy * (Fn+Fs)/2) + theta(3) * F .* X;
+    % M = theta(1) * (Fe|Fw) + theta(2) * (Fn|Fs) + theta(3) * F .* X;
+    M = F.*(theta(1) + theta(2)*(Fe|Fw-Fn|Fs) + theta(3)*X);
     f = find(M); % indices of frontier cells
     U = squeeze(U);
-
+    
     adopt = U(f)<= M(f);
-    a(f(adopt)) = true; % update activated cells to include adopters
+    a(f(adopt)) = true; % update activated cells to include adopted
+    exfl1 = mean(M(f));
+    if isnan(exfl1)
+        exfl1 = 0.5;
+    end
 
 end
 

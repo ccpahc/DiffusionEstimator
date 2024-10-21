@@ -22,6 +22,7 @@ function parameters = create_dataset(theta, n_averages, start_point)
     % add terrain data
     parameters.terrain = csidata;
     parameters.terrain = parameters.terrain/max(parameters.terrain(:));
+    parameters.terrain = parameters.terrain-mean(parameters.terrain(:))/std(parameters.terrain(:));
     
     parameters.lat = [latp(1) latp(end)];
     parameters.lon = [lonp(1) lonp(end)];
@@ -81,11 +82,11 @@ function parameters = create_dataset(theta, n_averages, start_point)
     end
 
     parameters.A(start_idx_x, start_idx_y, 1) = true;
+    parameters.n = n_averages;
     load("data/U_mat.mat","U");
     parameters.U = U(:,:,:,1:n_averages);
-    [A, ~, arrival_ind] = run_model(n_averages, parameters.A, parameters.T, theta, parameters.terrain, parameters.dataset_idx, U);
-
-    parameters.dataset_idx(:,3) = arrival_ind; 
+    result = run_model(parameters, theta);
+    parameters.dataset_idx(:,3) = result.times; 
     % Define the three colors (RGB format):
     color1 = [23/255, 42/255, 80/255];   % Blue
     color2 = [235/255, 232/255, 198/255];   % White

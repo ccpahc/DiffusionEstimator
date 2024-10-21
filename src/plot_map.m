@@ -41,8 +41,8 @@ function plot_map(parameters,errors)
     % Loop over each point and plot with the corresponding color
     scatterm(parameters.dataset_lat, parameters.dataset_lon, 10, errors, 'filled');
     cb = colorbar;
-    ylabel(cb,'t_{data} - t_{sim} (years)','FontSize',16);
-    max_abs_value = max(abs(errors(:)));
+    ylabel(cb,'speed','FontSize',16);
+    max_abs_value = 1;%max(abs(errors(:)));
     clim([-max_abs_value, max_abs_value]);
 
 

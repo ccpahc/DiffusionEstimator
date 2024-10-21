@@ -7,15 +7,10 @@ clc
 addpath('src');
 rng(12) % set random seed
 
-theory_theta = [0.3, 0.3, 0.0];
-theory_av = theory_theta(1);
-theory_r = theory_theta(2)/theory_theta(1);
-theory_terrain = theory_theta(3);
-
 % choose whether to load pinhasi dataset or create a dataset
-% parameters = data_prep();
-parameters = create_dataset(theory_theta, 20, [53.0627, 43.6865]);
-
+parameters = data_prep(20);
+% theory_theta = [0.15 0.05 0.1];
+% parameters = create_dataset(theory_theta, 20, [53.0627, 43.6865]);
 % data_prep creates parameters struct with the following fields:
 % parameters.A - initial matrix
 % parameters.T - number of time steps
@@ -29,6 +24,7 @@ parameters = create_dataset(theory_theta, 20, [53.0627, 43.6865]);
 % parameters.end_time - end time
 % parameters.lat - first and last latitude
 % parameters.lon - first and last longitude
+% parameters.n - number of averages
 
 %%
 
@@ -36,17 +32,22 @@ parameters = create_dataset(theory_theta, 20, [53.0627, 43.6865]);
 % theta(2) - average diffusion speed N-S
 % theta(3) - contribution of terrain (b1)
 
-av_theta = linspace(0.2,0.8,101);
-r_theta = logspace(-1,1,100);
-terrain_theta = theory_terrain;
-all_errors = zeros(length(av_theta),length(r_theta),length(terrain_theta));
- 
-for t = 1:length(terrain_theta)
-    for y = 1:length(r_theta)
-        for x = 1:length(av_theta)
-            theta = [av_theta(x), av_theta(x)*r_theta(y), terrain_theta(t)];
-            [A, error, times] = run_model(20, parameters.A, parameters.T, theta, parameters.terrain, parameters.dataset_idx,parameters.U);
-            all_errors(x,y,t) = calculate_error(parameters.dataset_idx, times, "absolute");
+theta_0 = linspace(0.1,0.32,50);
+theta_1 = linspace(-0.1,0.1,51);
+theta_2 = linspace(0.0,0.3,22);
+all_errors = zeros(length(theta_0),length(theta_1),length(theta_2));
+flag_1 = zeros(length(theta_0),length(theta_1),length(theta_2));
+flag_2 = zeros(length(theta_0),length(theta_1),length(theta_2));
+for t = 1:length(theta_2)
+    for y = 1:length(theta_1)
+        for x = 1:length(theta_0)
+            theta = [theta_0(x), theta_1(y), theta_2(t)];
+            tic
+            result = run_model(parameters, theta);
+            disp(toc)
+            all_errors(x,y,t) = result.squared_error*parameters.dt;
+            flag_1(x,y,t) = result.exitflag_1;
+            flag_2(x,y,t) = result.exitflag_2;
             disp(theta);
             disp(all_errors(x,y,t));
 
@@ -54,5 +55,5 @@ for t = 1:length(terrain_theta)
     end
 end
 
-save("sweep_results_ratio_no_chatter_20_avs.mat","all_errors","av_theta","r_theta","terrain_theta",'-mat')
-% disp("Done!")
+save("pinhasi_dataset_theta_0_1_2.mat","all_errors","theta_0","theta_1","theta_2","flag_1","flag_2",'-mat')
+disp("Done!")
