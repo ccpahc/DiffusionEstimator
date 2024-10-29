@@ -34,22 +34,17 @@ end
 
 parameters = data_prep(20);
 
-theta_0 = 0.127;
-theta_1 = 0.04;
-theta_2 = 0.129;
+% theta_0 = 0.1449;
+% theta_1 = -0.04;
+% theta_2 = 0.24;
+
+theta_0 = 0.12;
+theta_1 = 0.0;
+theta_2 = 0.22;
+
 theta = [theta_0 theta_1 theta_2];
 
 result = run_model(parameters, theta);
-
-% errors = calculate_error(parameters.dataset_idx, result.times, "full")*parameters.dt;
-% plot_map(parameters, errors);
-% figure(3)
-% hold on;
-% histogram(errors)
-% title('Error histogram')
-% xlabel('Error')
-% ylabel('Frequency')
-% fprintf('Elapsed time: %.2f seconds\n', toc);
 
 [min_time, min_idx] = min(parameters.dataset_idx(:,3));
 
@@ -57,17 +52,37 @@ times = parameters.dataset_idx(:,3) - min_time;
 lat = parameters.dataset_idx(:,1) - parameters.dataset_idx(min_idx,1);
 lon = parameters.dataset_idx(:,2) - parameters.dataset_idx(min_idx,2);
 
+errors = calculate_error(parameters.dataset_idx, result.times, "full")*parameters.dt;
+plot_map(parameters, errors);
+figure(3)
+hold on;
+histogram(errors)
+title('Error histogram')
+xlabel('Error')
+ylabel('Frequency')
+fprintf('Elapsed time: %.2f seconds\n', toc);
+
 distances = sqrt(lat.^2 +lon.^2);
 speeds = distances./times;
 P = polyfit(times,distances,1);
 figure
 hold on;
-plot(times, distances,'o')
-plot(sort(times), P(2) + P(1)*sort(times))
+plot(times, distances,'r.')
+plot(sort(times), P(2) + P(1)*sort(times),'r')
+xlabel('times/dt')
+ylabel('distances/dx')
+distances = sqrt(lat.^2 +lon.^2);
+speeds = distances./result.times;
+P = polyfit(result.times,distances,1);
+plot(result.times, distances,'b.')
+plot(sort(result.times), P(2) + P(1)*sort(result.times),'b')
 xlabel('times/dt')
 ylabel('distances/dx')
 local_speeds = compute_local_speeds(parameters.dataset_idx(:,1),parameters.dataset_idx(:,2),parameters.dataset_idx(:,3));
-% plot_map(parameters, local_speeds)
-% figure
-% histogram(local_speeds,100)
-% xlabel('local speed')
+plot_map(parameters, local_speeds)
+figure
+histogram(local_speeds,100)
+xlabel('local speed')
+
+figure
+plot(times,result.times,'.')

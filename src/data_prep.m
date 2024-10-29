@@ -43,7 +43,7 @@ function parameters = data_prep(n_averages)
     % define time array
     parameters.dt = 20; % time step in years
     parameters.start_time = floor(min(pinhasi.bp)/parameters.dt)*parameters.dt;
-    parameters.end_time = ceil(max(pinhasi.bp)/parameters.dt)*parameters.dt + 1000; % add 5000 years to end_time
+    parameters.end_time = ceil(max(pinhasi.bp)/parameters.dt)*parameters.dt + 1000; % add 1000 years to end_time
     parameters.T = round((parameters.end_time - parameters.start_time)/parameters.dt + 1);
 
     parameters.times = parameters.start_time:parameters.dt:parameters.end_time;
@@ -64,13 +64,14 @@ function parameters = data_prep(n_averages)
     parameters.terrain = csidata;
     parameters.terrain = parameters.terrain/max(parameters.terrain(:));
     parameters.terrain = parameters.terrain-mean(parameters.terrain(:))/std(parameters.terrain(:));
-
+    % parameters.terrain = parameters.terrain - 0.5;
     % initialize A
     parameters.A = false(length(latp), length(lonp), parameters.T);
     [~, earliest_event] = min(parameters.dataset_idx(:,3));
     parameters.A(parameters.dataset_idx(earliest_event,1), parameters.dataset_idx(earliest_event,2), 1) = true;
+    % set a seed and define matrix of random numbers
     rng(12);
     U = rand(length(latp), length(lonp), parameters.T, n_averages);
     parameters.n = n_averages;
-    parameters.U = U(:,:,:,1:n_averages);
+    parameters.U = U;
 end

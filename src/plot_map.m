@@ -26,9 +26,9 @@ function plot_map(parameters,errors)
     predictions = size_t - pinhasi_active(:,3);
     
     % Define the three colors (RGB format):
-    color1 = [23/255, 42/255, 80/255];   % Blue
+    color1 = [30/255, 51/255, 110/255];   % Blue
     color2 = [235/255, 232/255, 198/255];   % White
-    color3 = [80/255, 13/255, 23/255];   % Red
+    color3 = [110/255, 20/255, 30/255];   % Red
 
     % Number of points in your colormap:
     numColors = 256; 
@@ -42,7 +42,7 @@ function plot_map(parameters,errors)
     scatterm(parameters.dataset_lat, parameters.dataset_lon, 10, errors, 'filled');
     cb = colorbar;
     ylabel(cb,'speed','FontSize',16);
-    max_abs_value = 1;%max(abs(errors(:)));
+    max_abs_value = max(abs(errors(:)));
     clim([-max_abs_value, max_abs_value]);
 
 

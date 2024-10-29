@@ -1,8 +1,11 @@
 function result = run_model(parameters, theta)
+    % create result structure
     result = struct();
+    % unpack parameters structure
     A_start = parameters.A;
     X = parameters.terrain;
     data = parameters.dataset_idx;
+
     % Initialize the accumulators
     A_av = zeros(size(A_start));
     simulation_times = zeros(1,length(data));
@@ -28,6 +31,7 @@ function result = run_model(parameters, theta)
     simulation_times = simulation_times / parameters.n;
     A_av = A_av / parameters.n;
 
+    % assign values to result structure
     result.A = A_av;
     result.times = simulation_times;
     result.errors = calculate_error(data, simulation_times, "full");
@@ -53,19 +57,21 @@ end
 
 
 function [exfl1,a] = step(a, theta, X, U)
-    % a = sparse(a);
-    %normalize c_x and c_y
+    a = sparse(a);
+
     [Fn,Fs,Fw,Fe] = frontier(a); % find adjacent cells to currently activated ones
     F = Fn | Fs | Fw | Fe;
-    % theta(1) - average diffusion speed N-S
-    % theta(2) - average diffusion speed E-W
+    % theta(1) - average diffusion speed 
+    % theta(2) - anisotropy term
     % theta(3) - contribution of terrain (b1)
-    % M = theta(1) * (Fe|Fw) + theta(2) * (Fn|Fs) + theta(3) * F .* X;
+
+    % OLD -> M = theta(1) * (Fe|Fw) + theta(2) * (Fn|Fs) + theta(3) * F .* X;
     M = F.*(theta(1) + theta(2)*(Fe|Fw-Fn|Fs) + theta(3)*X);
     f = find(M); % indices of frontier cells
     U = squeeze(U);
-    
-    adopt = U(f)<= M(f);
+    k = 5;
+    probabilities = 1./(1 + exp(-k * (M(f) - 0.5)));
+    adopt = U(f)<= probabilities;
     a(f(adopt)) = true; % update activated cells to include adopted
     exfl1 = mean(M(f));
     if isnan(exfl1)

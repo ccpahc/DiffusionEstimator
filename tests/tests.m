@@ -1,18 +1,16 @@
 % save("sweep_1_avg_dt_20.mat", "errors", "terrain_theta", "x_theta", "y_theta",'final_As');
 
-load("pinhasi_dataset_theta_0_1_2.mat")
+load("pinhasi_dataset_theta_0_2.mat")
 % load("pinhasi_sweep_with_exit_flags.mat")
 [min_error, min_error_idx] = min(all_errors(:));
 [idx_0, idx_1, idx_2] = ind2sub(size(all_errors), min_error_idx);
 
 %% Error landscape and gradient
 
-if false
+if true
     dt = 20;
-    all_errors = all_errors/dt;
-    
-    
-    [X,Y] = meshgrid(theta_0,theta_1);
+   
+    [X,Y] = meshgrid(theta_0,theta_2);
     
     % Define the three colors (RGB format):
     color1 = [23/255, 42/255, 80/255];   % Blue
@@ -28,20 +26,20 @@ if false
     colormap(parula)
     f = flag_1+flag_2;
     v = [0.2,0.2];
-    ind = 7;
+    ind = 16;
     figure(1)
     hold on;
-    pcolor(X,Y,squeeze(all_errors(:,:,ind))')
-    contour(X,Y,squeeze(f(:,:,ind))',v,'ShowText','on')
+    pcolor(X,Y,squeeze(all_errors)')
+    contour(X,Y,squeeze(f)',v,'ShowText','on')
     colorbar;
-    ylabel("y theta")
-    xlabel("x theta")
+    ylabel("theta_0")
+    xlabel("thet_2")
     % plot point with lowest error in red
     hold on
     plot(theta_0(idx_0), theta_2(idx_2), 'r*', 'MarkerSize',10)
     % add text box with error value next to point with white background
     annotation('textbox', [0.42 0.49 0.1 0.1], 'String', sprintf('error^{1/2} = %f', sqrt(min_error)*dt), 'EdgeColor', 'none', 'BackgroundColor', 'white', 'HorizontalAlignment', 'center', 'FontSize', 14);
-    max_abs_value = 5000;%max(abs(all_grad(:)))/20;
+    max_abs_value = 200000;%max(abs(all_grad(:)))/20;
     clim([min(all_errors(:)), max_abs_value]);
     
     figure(2)
@@ -49,7 +47,7 @@ if false
     [all_grad_x, all_grad_y] = gradient(squeeze(all_errors(:,1,:)));
     all_grad = sqrt(all_grad_x.^2 + all_grad_y.^2);
     % pcolor(X,Y,all_grad')
-    pcolor(X,Y,squeeze(flag_1(:,:,ind))')
+    pcolor(X,Y,squeeze(flag_1)')
     colormap(cmap)
     xlabel("average diffusion speed")
     ylabel("ratio")
@@ -61,7 +59,7 @@ if false
 end
 
 %% ERROR GIF
-if true
+if false
     % Create a cell array to store the frames
     frames = cell(1, 10);
     [X,Y] = meshgrid(theta_0,theta_1);
@@ -73,10 +71,10 @@ if true
         figure
         hold on;
         pcolor(X,Y,squeeze(all_errors(:,:,i))')
-        plot(theta_0_av,theta_1_av,'r');
+
         % clim([dt*min(errors(:)), dt*max(errors(:))]);
         max_abs_value = 1.2e5;%max(abs(all_grad(:)))/20;
-        clim([min(all_errors(:)), max_abs_value]);
+        % clim([min(all_errors(:)), max_abs_value]);
         ylabel("theta_0")
         xlabel("theta_1")
 

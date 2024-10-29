@@ -32,9 +32,9 @@ parameters = data_prep(20);
 % theta(2) - average diffusion speed N-S
 % theta(3) - contribution of terrain (b1)
 
-theta_0 = linspace(0.1,0.32,50);
-theta_1 = linspace(-0.1,0.1,51);
-theta_2 = linspace(0.0,0.3,22);
+theta_0 = linspace(0.0,1,51);
+theta_1 = [0];%linspace(-0.05,0.05,11);
+theta_2 = linspace(0.0,1.5,50);
 all_errors = zeros(length(theta_0),length(theta_1),length(theta_2));
 flag_1 = zeros(length(theta_0),length(theta_1),length(theta_2));
 flag_2 = zeros(length(theta_0),length(theta_1),length(theta_2));
@@ -55,5 +55,5 @@ for t = 1:length(theta_2)
     end
 end
 
-save("pinhasi_dataset_theta_0_1_2.mat","all_errors","theta_0","theta_1","theta_2","flag_1","flag_2",'-mat')
+save("pinhasi_dataset_theta_0_2.mat","all_errors","theta_0","theta_1","theta_2","flag_1","flag_2",'-mat')
 disp("Done!")
