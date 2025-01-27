@@ -33,15 +33,13 @@ function local_speeds = compute_local_speeds(x, y, t)
     end
 end
 
-active_layers = [1 0 1 0 0];
-parameters = data_prep(20, active_layers);
+active_layers = [1 0 0 1 0];
+cobo = readtable( ...
+     'data/raw/cobo_etal/cobo_etal_data.xlsx');
+parameters = data_prep(50, active_layers, cobo.Latitude, cobo.Longitude, cobo.Est_DateMean_BC_AD_);
 
-% theta_0 = 0.1449;
-% theta_1 = -0.04;
-% theta_2 = 0.24;
-
-theta_0 = -0.9683;
-theta_1 = 0.5583;
+theta_0 = 0.5;
+theta_1 = .1;
 
 
 theta = [theta_0 theta_1];

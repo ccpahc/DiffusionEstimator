@@ -37,14 +37,14 @@ function result = run_model(parameters, theta)
         RandStream.setGlobalStream(stream); % Set the stream for each worker
     end
 
-    parfor rep = 1:parameters.n
+    for rep = 1:parameters.n
         % Run the model for each instance
         U = rand(stream, size(A_start));
         if calculate_W == false
             [A, exfl1] = run_model_av(A_start, nt, theta, X, U, active_layers);
             % calculate arrival times
             [times, exfl2] = calculate_times(A, data);
-            times = times*dt;
+            times = times;
         elseif calculate_W
             f = @(theta)calculate_times(run_model_av(A_start, nt, theta, X, U, active_layers),data)*dt;
             g = calculateGradient(f,theta);
@@ -74,9 +74,8 @@ function result = run_model(parameters, theta)
     % assign values to result structure
     result.A = A_av;
     result.times = simulation_times;
-    result.errors = calculate_error(data, simulation_times, "full");
-    weights = data_times/max(data_times(:));
-    result.squared_error = sum((data_times - simulation_times').^2.*weights) / length(data);
+    result.errors = calculate_error(data, simulation_times, dt, "full");
+    result.squared_error = sum((data_times - simulation_times').^2) * parameters.dt / length(data);
     result.percentage_squared_error = percentage_squared_error / parameters.n / length(data);
     result.percentage_data = percentage_data / parameters.n;
     result.percentage_model = percentage_model / parameters.n;

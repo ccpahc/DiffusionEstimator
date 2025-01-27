@@ -1,4 +1,4 @@
-function [error, times] = calculate_error(data, times, type)
+function [error, times] = calculate_error(data, times, dt, type)
 
     t_simulations = times;
     t_data = data(:,3)';
@@ -15,11 +15,11 @@ function [error, times] = calculate_error(data, times, type)
     end
 
     if type == "full"
-        error = errors;
+        error = errors*dt;
     elseif type == "average"
-        error = (mean(errors));
+        error = (mean(errors))*dt;
     else
-        error = mean(errors);
+        error = mean(errors)*dt;
     end
 
     if nargout == 2

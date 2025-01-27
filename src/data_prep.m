@@ -2,7 +2,7 @@ function parameters = data_prep(n_averages, active_layers, lats, lons, years)
 
     parameters = struct();
     % load build
-    load('data/prep/geography_0p5deg.mat');
+    load('data/prep/geography_0p25deg.mat');
     
     % 
     % % load pinhasi
