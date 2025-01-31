@@ -3,15 +3,15 @@
 clear all
 tic
 t = datetime;
-
+t.Format = 'yyyy-MM-dd_HH-mm';
 % choose whether to load or start
 load = false;
 
 %%
 if load == false
 
-    number_of_averages = 100;
-    filename = 'Cobo_dataset_CSI_SEA_layers';
+    number_of_averages = 200;
+    filename = 'Cobo_dataset_CSI_layer_';
     filename = filename + string(number_of_averages);
     filename = filename + "_";
     filename = filename + string(t);
@@ -36,7 +36,7 @@ if level < 1
     
     % Average diffusion
     average_range = [-1.0, 1.0];
-    % Anisotropy
+    % Anisotropy 
     anisotropy_range = [0.0, 0.0];
     % csi
     csi_range = [-1.0, 1.0]; 
@@ -44,8 +44,8 @@ if level < 1
     hydro_range = [0.0, 0.0];
 
     ranges = [average_range; anisotropy_range; csi_range; hydro_range];
-
-    sage_layers = [0];
+    
+    sage_layers = [];
     
     for i = 0:16
         if ismember(i,sage_layers)

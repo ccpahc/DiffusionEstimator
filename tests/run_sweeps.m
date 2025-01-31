@@ -35,32 +35,39 @@ parameters = data_prep(50, active_layers, cobo.Latitude, cobo.Longitude, cobo.Es
 % theta(2) - average diffusion speed N-S
 % theta(3) - contribution of terrain (b1)
 objective_function = @(theta) run_model(parameters, theta).squared_error;
-theta_0 = linspace(0.,15.,51);
-theta_1 = linspace(-5.,10.,51);
+theta_0 = linspace(-2.,2.,101);
+theta_1 = linspace(-2.,2.,101);
 theta_2 = [0];
 all_errors = zeros(length(theta_0),length(theta_1),length(theta_2));
 all_gradients = zeros(length(theta_0),length(theta_1),length(theta_2),3);
 flag_1 = zeros(length(theta_0),length(theta_1),length(theta_2));
 flag_2 = zeros(length(theta_0),length(theta_1),length(theta_2));
-for t = 1:length(theta_2)
-    for y = 1:length(theta_1)
-        for x = 1:length(theta_0)
-            theta = [theta_0(x); theta_1(y); theta_2(t)];
-            tic
-            result = run_model(parameters, theta);
-            
-            % disp(toc)
-            all_errors(x,y,t) = result.squared_error;
-            % grads = calculateGradient(objective_function, theta, 0.1);
-            % all_gradients(x,y,t,:) = grads;
-            flag_1(x,y,t) = result.exitflag_1;
-            flag_2(x,y,t) = result.exitflag_2; 
-            disp(theta);
-            disp(all_errors(x,y,t));
+% for t = 1:length(theta_2)
+%     for y = 1:length(theta_1)
+%         for x = 1:length(theta_0)
+%             theta = [theta_0(x); theta_1(y); theta_2(t)];
+%             tic
+%             result = run_model(parameters, theta);
+% 
+%             disp(toc)
+%             all_errors(x,y,t) = result.squared_error;
+%             % grads = calculateGradient(objective_function, theta, 0.1);
+%             % all_gradients(x,y,t,:) = grads;
+%             flag_1(x,y,t) = result.exitflag_1;
+%             flag_2(x,y,t) = result.exitflag_2; 
+%             disp(theta);
+%             % disp(all_errors(x,y,t));
+% 
+%         end
+%     end
+% end
 
-        end
-    end
-end
+ranges = [[-2 2];[-2,2]];
+n_points = 51;
+[theta_min, on_edge, min_error, errors] = sweep(ranges, n_points, 0, parameters);
 
-save("cobo_dataset_av_hydro_p25.mat","all_errors","all_gradients","theta_0","theta_1","theta_2","flag_1","flag_2",'-mat')
+all_errors = reshape(errors, [n_points,n_points]);
+
+save("cobo_dataset_av_hydro.mat","all_errors","all_gradients","theta_0","theta_1","theta_2","flag_1","flag_2",'-mat')
 disp("Done!")
+
