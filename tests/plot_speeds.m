@@ -33,13 +33,13 @@ function local_speeds = compute_local_speeds(x, y, t)
     end
 end
 
-active_layers = [1 0 0 1 0];
+active_layers = [1 0 1 0 0];
 cobo = readtable( ...
      'data/raw/cobo_etal/cobo_etal_data.xlsx');
 parameters = data_prep(50, active_layers, cobo.Latitude, cobo.Longitude, cobo.Est_DateMean_BC_AD_);
 
-theta_0 = 0.5;
-theta_1 = .1;
+theta_0 = 0.6;
+theta_1 = -1;
 
 
 theta = [theta_0 theta_1];
@@ -53,7 +53,7 @@ times = parameters.dataset_idx(:,3) - min_time;
 lat = parameters.dataset_idx(:,1) - parameters.dataset_idx(min_idx,1);
 lon = parameters.dataset_idx(:,2) - parameters.dataset_idx(min_idx,2);
 
-errors = calculate_error(parameters.dataset_idx, result.times, "full")*parameters.dt;
+errors = calculate_error(parameters.dataset_idx, result.times, parameters.dt, "full");
 plot_map(parameters, errors);
 
 
@@ -74,7 +74,7 @@ hold on;
 [distances, distances_ind] = sort(distances);
 times = times(distances_ind);
 plot(times, distances,'r.')
-plot(times, P(2) + P(1)*times,'r')
+% plot(times, P(2) + P(1)*times,'r')
 xlabel('times/dt')
 ylabel('distances/dx')
 
@@ -82,7 +82,7 @@ speeds_model = distances./result.times';
 P = polyfit(result.times,distances,1);
 result.times = result.times(distances_ind);
 plot(result.times, distances,'b.')
-plot(result.times, P(2) + P(1)*result.times,'b')
+% plot(result.times, P(2) + P(1)*result.times,'b')
 xlabel('times/dt')
 ylabel('distances/dx')
 local_speeds = compute_local_speeds(parameters.dataset_idx(:,1),parameters.dataset_idx(:,2),parameters.dataset_idx(:,3));

@@ -10,8 +10,8 @@ load = false;
 %%
 if load == false
 
-    number_of_averages = 100;
-    filename = 'Cobo_dataset_CSI_SEA_layers';
+    number_of_averages = 200;
+    filename = 'Cobo_one_start_dataset_CSI_layers';
     filename = filename + string(number_of_averages);
     filename = filename + "_";
     filename = filename + string(t);
@@ -39,17 +39,17 @@ if level < 1
     % Anisotropy
     anisotropy_range = [0.0, 0.0];
     % csi
-    csi_range = [-1.0, 1.0]; 
+    csi_range = [0.0, 0.0]; 
     % hydro
-    hydro_range = [0.0, 0.0];
+    hydro_range = [-1.0, 1.0];
 
     ranges = [average_range; anisotropy_range; csi_range; hydro_range];
 
-    sage_layers = [0];
+    sage_layers = [];
     
     for i = 0:16
         if ismember(i,sage_layers)
-            ranges = [ranges; [-1.0 1.0]];
+            ranges = [ranges; [-.0 1.0]];
         else
             ranges = [ranges; [0.0 0.0]];
         end
@@ -283,7 +283,7 @@ standard_errors = sqrt(diag(var_mat))
 %% report results
 runtime = toc;
 A = result.A;
-final_errors = result.errors*parameters.dt;
+final_errors = result.errors;
 times = result.times;
 
 disp('Final result:');

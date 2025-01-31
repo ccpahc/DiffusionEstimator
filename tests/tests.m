@@ -1,6 +1,6 @@
 % save("sweep_1_avg_dt_20.mat", "errors", "terrain_theta", "x_theta", "y_theta",'final_As');
 
-load("cobo_dataset_av_hydro_p25.mat")
+load("cobo_dataset_av_csi_2_start.mat")
 % load("pinhasi_sweep_with_exit_flags.mat")
 
 [min_error, min_error_idx] = min(all_errors(:));
@@ -40,7 +40,7 @@ if true
     plot(theta_0(idx_0), theta_1(idx_1), 'r*', 'MarkerSize',10)
     % add text box with error value next to point with white background
     % annotation('textbox', [0.42 0.49 0.1 0.1], 'String', sprintf('error^{1/2} = %f', sqrt(min_error)*dt), 'EdgeColor', 'none', 'BackgroundColor', 'white', 'HorizontalAlignment', 'center', 'FontSize', 14);
-    max_abs_value = 4.345e6;%max(abs(all_grad(:)))/20;
+    max_abs_value = max(abs(all_grad(:)));
     clim([min(all_errors(:)), max_abs_value]);
     
     % figure(2)

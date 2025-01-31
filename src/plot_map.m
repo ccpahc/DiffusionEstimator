@@ -1,5 +1,9 @@
-function plot_map(parameters,errors)
-    A = parameters.A;
+function plot_map(parameters,errors, adjust_scale, A_result)
+    if nargin > 3
+        A = A_result;
+    else
+        A = parameters.A;
+    end
     pinhasi_active = parameters.dataset_idx;
     land = shaperead('landareas.shp', 'UseGeoCoords', true);
 
@@ -46,7 +50,17 @@ function plot_map(parameters,errors)
     cb = colorbar;
     ylabel(cb,'t_{data} - t_{sim}','FontSize',16);
     max_abs_value = max(abs(errors(:)));
-    clim([-max_abs_value, max_abs_value]);
+
+
+    % if nargin > 2
+    %     if adjust_scale
+    %         max_abs_value = max(abs(errors(:)));
+    %         clim([-max_abs_value, max_abs_value]);
+    %     else
+    %         clim([min(errors(:)),max(errors(:))])
+    %     end
+    %     ylabel(' ')
+    % end
 
 
 end

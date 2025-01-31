@@ -2,7 +2,7 @@ function parameters = data_prep(n_averages, active_layers, lats, lons, years)
 
     parameters = struct();
     % load build
-    load('data/prep/geography_0p25deg.mat');
+    load('data/prep/geography_0p5deg.mat');
     
     % 
     % % load pinhasi
@@ -92,6 +92,8 @@ function parameters = data_prep(n_averages, active_layers, lats, lons, years)
     parameters.A = false(length(latp), length(lonp), parameters.T);
     [~, earliest_event] = min(parameters.dataset_idx(:,3));
     parameters.A(parameters.dataset_idx(earliest_event,1), parameters.dataset_idx(earliest_event,2), 1) = true;
+    % add second start point
+    parameters.A(76,39,46) = true;
     % set a seed and define matrix of random numbers
     % rng(12);
     % U = rand(length(latp), length(lonp), parameters.T, n_averages);

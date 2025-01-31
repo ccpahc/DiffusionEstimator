@@ -95,7 +95,7 @@ function [A, exitflag] = run_model_av(A_start, nt, theta, X, U, active_layers)
     U = squeeze(U);
     flag = 0;
     for t = 2:nt
-        [extflg1, A(:,:,t)] = step(A(:,:,t-1), theta, X, U(:,:,t), active_layers);
+        [extflg1, A(:,:,t)] = step(A(:,:,t-1)+A_start(:,:,t-1), theta, X, U(:,:,t), active_layers);
         flag = flag + extflg1/nt;
     end
     if nargout > 1

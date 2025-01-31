@@ -21,13 +21,13 @@ DESCRIPTION OF PROCESS
 clear
 clc
 
-delta = 1/4;
+delta = 1/2;
 
 clearvars -except delta
 
 disp('Build geography data ...')
 
-filename = 'data/prep/geography_0p25deg.mat';
+filename = 'data/prep/geography_0p5deg.mat';
 
 %% Prepare Template Raster
 
@@ -209,7 +209,7 @@ acc = struct(...
     'data', acc, ...
     'source', 'HydroSHEDS 30s ACC (Riverflow Accumulation)');
 
-save(filename', 'acc', '-append')
+save(filename, 'acc', '-append')
 
 
 %% Pre-1500 Caloric Suitability Index (Galor and Özak 2016)
@@ -237,6 +237,104 @@ csidata = flipud(csidata);
 
 save(filename, 'csidata', '-append')
 
+
+%% t-mean
+
+filenames = {'tmean1','tmean2','tmean3','tmean4','tmean5','tmean6','tmean7','tmean8','tmean9','tmean10','tmean11','tmean12'};
+
+directory = 'data/raw/WorldClim/tmean_5m_bil/';
+
+for f = 1:length(filenames)
+
+    % prepare parameters for BIL file import
+    fn = strcat(directory ,filenames{f}, '.bil');
+    hdrfile = strcat(directory, filenames{f}, '.hdr');
+    hdr = importdata(hdrfile, '\t');
+
+
+    for k=1:length(hdr)
+        hdr{k} = regexp(hdr{k},'\s+','split');
+    end
+
+    % import BIL file
+    rowscols = [str2num(hdr{3}{2}) ...
+        str2num(hdr{4}{2}) ...
+        str2num(hdr{5}{2})]; % [NROWS NCOLS NBANDS]
+    precision = strcat('int',hdr{6}{2}); % from NBITS and PIXEL TYPE = int
+    offset = 0; % since the header is not included in this file
+    interleave = 'bil'; % LAYOUT
+    byteorder = 'ieee-le'; % BYTEORDER = I
+    data = multibandread(fn, ...
+        rowscols, precision, offset, interleave, byteorder);
+
+    data(data==-9999) = 0;
+    data = flipud(data);
+
+    % Actual delta
+    delta_act = 1/120;
+
+    if delta ~= delta_act
+        data = imresize(data, delta_act/delta, 'bilinear', delta/delta_act);
+    end
+    if f == 1
+        data_all = data;
+    elseif f > 1
+        data_all = data_all + data/length(filenames);
+    end
+end
+
+tmean = struct('data', data_all);
+
+save(filename,'tmean','-append')
+
+%% Precipitation
+
+filenames = {'prec1','prec2','prec3','prec4','prec5','prec6','prec7','prec8','prec9','prec10','prec11','prec12'};
+
+directory = 'data/raw/WorldClim/prec_5m_bil/';
+
+for f = 1:length(filenames)
+
+    % prepare parameters for BIL file import
+    fn = strcat(directory ,filenames{f}, '.bil');
+    hdrfile = strcat(directory, filenames{f}, '.hdr');
+    hdr = importdata(hdrfile, '\t');
+
+
+    for k=1:length(hdr)
+        hdr{k} = regexp(hdr{k},'\s+','split');
+    end
+
+    % import BIL file
+    rowscols = [str2num(hdr{3}{2}) ...
+        str2num(hdr{4}{2}) ...
+        str2num(hdr{5}{2})]; % [NROWS NCOLS NBANDS]
+    precision = strcat('int',hdr{6}{2}); % from NBITS and PIXEL TYPE = int
+    offset = 0; % since the header is not included in this file
+    interleave = 'bil'; % LAYOUT
+    byteorder = 'ieee-le'; % BYTEORDER = I
+    data = multibandread(fn, ...
+        rowscols, precision, offset, interleave, byteorder);
+
+    data(data==-9999) = 0;
+    data = flipud(data);
+
+    % Actual delta
+    delta_act = 1/120;
+
+    if delta ~= delta_act
+        data = imresize(data, delta_act/delta, 'bilinear', delta/delta_act);
+    end
+    if f == 1
+        data_all = data;
+    elseif f > 1
+        data_all = data_all + data/length(filenames);
+    end
+end
+
+prec = struct('data', data_all);
+
+save(filename,'prec','-append')
 
 %% Slope and TRI (Nunn and Puga)
 
