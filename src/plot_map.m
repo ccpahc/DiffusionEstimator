@@ -52,15 +52,15 @@ function plot_map(parameters,errors, adjust_scale, A_result)
     max_abs_value = max(abs(errors(:)));
 
 
-    % if nargin > 2
-    %     if adjust_scale
-    %         max_abs_value = max(abs(errors(:)));
-    %         clim([-max_abs_value, max_abs_value]);
-    %     else
-    %         clim([min(errors(:)),max(errors(:))])
-    %     end
-    %     ylabel(' ')
-    % end
+    if nargin > 2
+        if adjust_scale
+            max_abs_value = max(abs(errors(:)));
+            clim([-max_abs_value, max_abs_value]);
+        else
+            clim([min(errors(:)),max(errors(:))])
+        end
+        ylabel(' ')
+    end
 
 
 end

@@ -1,4 +1,4 @@
-function grad = calculateGradient(f, x0, epsilon)
+function grad = calculateGradient(f, x0, epsilon, factor)
     % calculateGradient computes the gradient vector of a scalar function using finite differences.
     %
     % Inputs:
@@ -24,6 +24,6 @@ function grad = calculateGradient(f, x0, epsilon)
         e_i(i) = epsilon;
         
         % Approximate partial derivative
-        grad(i,:) = 10*(f(x0 + e_i) - f(x0 - e_i)) / (2 * epsilon);
+        grad(i,:) = factor*(f(x0 + e_i) - f(x0 - e_i)) / (2 * epsilon);
     end
 end

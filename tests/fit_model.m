@@ -11,7 +11,7 @@ load = false;
 if load == false
 
     number_of_averages = 200;
-    filename = 'Cobo_one_start_dataset_CSI_layers';
+    filename = 'Cobo_two_start_dataset_Hydro_layers';
     filename = filename + string(number_of_averages);
     filename = filename + "_";
     filename = filename + string(t);
@@ -49,7 +49,7 @@ if level < 1
     
     for i = 0:16
         if ismember(i,sage_layers)
-            ranges = [ranges; [-.0 1.0]];
+            ranges = [ranges; [-1.0 1.0]];
         else
             ranges = [ranges; [0.0 0.0]];
         end
@@ -164,15 +164,14 @@ end
 %% Level 5 - run optimizer
 
 function [error, grad, hessian] = optimize_model(theta, parameters, factor)
-    theta = theta/factor;
     result = run_model(parameters, theta);
     error = result.squared_error;
     if nargout > 1
         f = @(theta) run_model(parameters, theta).squared_error;
-        grad = calculateGradient(f, theta*factor, 0.1);
+        grad = calculateGradient(f, theta, 0.01, factor);
     end
     if nargout > 2
-        hessian = calculateHessian(f, theta*factor, 0.1);
+        hessian = calculateHessian(f, theta, 0.01);
     end
 end
 
@@ -201,7 +200,7 @@ if level < 5
     all_params = {};
     for factor=factors
     
-        objective_function = @(theta) optimize_model(theta, parameters, factor);
+        objective_function = @(theta) optimize_model(theta, parameters, 1e10);
         theta_start = theta_start*factor;
         
         % WITH GRADIENT
@@ -210,7 +209,7 @@ if level < 5
             'Algorithm', 'trust-region', ...
             'HessianFcn','objective', ...
             'SpecifyObjectiveGradient',true, ...
-            'StepTolerance', 1e-6*factor, ...,
+            'StepTolerance', 5e-3*factor, ...,
             "FiniteDifferenceStepSize", 0.1*factor, ...,
             "FunctionTolerance",0.00001, ...
             "OptimalityTolerance",2e-6/factor, ...
@@ -289,7 +288,7 @@ times = result.times;
 disp('Final result:');
 disp(theta_optim);
 
-plot_map(parameters, final_errors)
+plot_map(parameters, final_errors, true)
 
 save(filename, "result", '-append')
 
@@ -306,16 +305,17 @@ parameters.calculate_W = false;
 for i = 1:n_bootstraps
     % 
     rng('shuffle');
-    n = size(complete_dataset, 1); % Number of points in the dataset
-    % Generate n random indices between 1 and n
-    random_indices = randi(n, n, 1);
-    % Use the indices to sample points from the dataset
-    sampled_dataset = complete_dataset(random_indices, :);
-    parameters.dataset_idx = sampled_dataset;
+    parameters.U = rand(size(parameters.A));
+    % n = size(complete_dataset, 1); % Number of points in the dataset
+    % % Generate n random indices between 1 and n
+    % random_indices = randi(n, n, 1);
+    % % Use the indices to sample points from the dataset
+    % sampled_dataset = complete_dataset(random_indices, :);
+    % parameters.dataset_idx = sampled_dataset;
 
 
     objective_function = @(theta) optimize_model(theta, parameters, factor);
-    theta_start = theta_start*factor;
+    % theta_start = theta_start*factor;
 
     options = optimoptions('fminunc', ...
             'Display', 'iter', ...
