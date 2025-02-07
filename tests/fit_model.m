@@ -195,12 +195,13 @@ function stop = saveIterations(x, optimValues, state)
 end
 
 if level < 5
-    
+parameters = data_prep(number_of_averages*100, active_layers, cobo.Latitude, cobo.Longitude, cobo.Est_DateMean_BC_AD_);
+
     factors = [1];
     all_params = {};
     for factor=factors
     
-        objective_function = @(theta) optimize_model(theta, parameters, 1e10);
+        objective_function = @(theta) optimize_model(theta, parameters, 1e7);
         theta_start = theta_start*factor;
         
         % WITH GRADIENT
@@ -210,7 +211,7 @@ if level < 5
             'HessianFcn','objective', ...
             'SpecifyObjectiveGradient',true, ...
             'StepTolerance', 5e-3*factor, ...,
-            "FiniteDifferenceStepSize", 0.1*factor, ...,
+            "FiniteDifferenceStepSize", 0.001*factor, ...,
             "FunctionTolerance",0.00001, ...
             "OptimalityTolerance",2e-6/factor, ...
             'MaxFunctionEvaluations', 10000, ...
@@ -270,7 +271,6 @@ end
 %     save(filename, "level", "theta_final","runtime", '-append')
 % end
 %%
-parameters = data_prep(number_of_averages, active_layers, cobo.Latitude, cobo.Longitude, cobo.Est_DateMean_BC_AD_);
 [error, grad, hessian] = optimize_model(theta_optim, parameters, factor);
 parameters.calculate_W = true;
 result = run_model(parameters,theta_optim);
