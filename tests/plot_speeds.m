@@ -33,17 +33,17 @@ function local_speeds = compute_local_speeds(x, y, t)
     end
 end
 
-active_layers = [1 0 1 1 0];
+active_layers = [1 0 0 1 0];
 cobo = readtable( ...
      'data/raw/cobo_etal/cobo_etal_data.xlsx');
 parameters = data_prep(50, active_layers, cobo.Latitude, cobo.Longitude, cobo.Est_DateMean_BC_AD_);
 
-theta_0 = -0.58;
-theta_1 = 0.166;
-theta_2 = -0.98;
+theta_0 = -1.3351;
+theta_1 = 1.5267;
 
 
-theta = [theta_0 theta_1 theta_2];
+
+theta = [theta_0 theta_1 ];
 
 
 result = run_model(parameters, theta);
@@ -55,7 +55,7 @@ lat = parameters.dataset_idx(:,1) - parameters.dataset_idx(min_idx,1);
 lon = parameters.dataset_idx(:,2) - parameters.dataset_idx(min_idx,2);
 
 errors = calculate_error(parameters.dataset_idx, result.times, parameters.dt, "full");
-plot_map(parameters, errors, trueha);
+plot_map(parameters, errors, true);
 
 
 %%
