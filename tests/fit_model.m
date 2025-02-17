@@ -11,7 +11,7 @@ load = false;
 if load == false
 
     number_of_averages = 100;
-    filename = 'Cobo_two_start_dataset_Hydro_layers';
+    filename = 'Cobo_dataset_hydro';
     filename = filename + string(number_of_averages);
     filename = filename + "_";
     filename = filename + string(t);
@@ -36,7 +36,6 @@ if level < 1
     
     % Average diffusion
     average_range = [-2.0, 2.0];
-    % Anisotropy 
     anisotropy_range = [0.0, 0.0];
     % csi
     csi_range = [0.0, 0.0]; 
@@ -45,11 +44,11 @@ if level < 1
 
     ranges = [average_range; anisotropy_range; csi_range; hydro_range];
 
-    sage_layers = [];
+    sage_layers = [0];
     
     for i = 0:16
         if ismember(i,sage_layers)
-            ranges = [ranges; [-1.0 1.0]];
+            ranges = [ranges; [-2.0 2.0]];
         else
             ranges = [ranges; [0.0 0.0]];
         end
@@ -83,13 +82,20 @@ if level < 2
     % pinhasi = pinhasi(:,{'lat', 'lon', 'bp'});
     % pinhasi.bp = 2000 - pinhasi.bp; % from BP to year
     % 
-    % parameters = data_prep(number_of_averages, active_layers, pinhasi.lat, pinhasi.lon, pinhasi.bp);
+    % x = pinhasi.lat;
+    % y = pinhasi.lon;
+    % t = pinhasi.bp;
     
     % LOAD COBO et al
 
     cobo = readtable( ...
          'data/raw/cobo_etal/cobo_etal_data.xlsx');
-    parameters = data_prep(number_of_averages, active_layers, cobo.Latitude, cobo.Longitude, cobo.Est_DateMean_BC_AD_);
+
+    x = cobo.Latitude;
+    y = cobo.Longitude;
+    t = cobo.Est_DateMean_BC_AD_;
+
+    parameters = data_prep(number_of_averages, active_layers, x, y, t);
 
     % data_prep creates parameters struct with the following fields:
     % parameters.A - initial matrix
@@ -147,9 +153,9 @@ end
 
 if level < 4
     parameters.n = 20;
-    [theta_start, on_edge, min_error, errors] = sweep(ranges, 6, 1, parameters);
+    [theta_start, on_edge, min_error, errors] = sweep(ranges, 6, 2, parameters);
 
-    ranges = [0.15 1.15].*theta_start';  
+    ranges = [0.85 1.15].*theta_start';  
 
     [theta_start, ~, min_error, errors] = sweep(ranges, 6, 1, parameters);
 
@@ -159,7 +165,7 @@ if level < 4
     if on_edge
         disp("Likely the given ranges are wrong")
     else
-        disp('Local minimum found at '+ str(theta_start))
+        disp('Local minimum found')
     end
     save(filename, 'theta_start', "level", "min_error", '-append')
 end
@@ -198,8 +204,7 @@ function stop = saveIterations(x, optimValues, state)
 end
 
 if level < 5
-parameters = data_prep(number_of_averages, active_layers, cobo.Latitude, cobo.Longitude, cobo.Est_DateMean_BC_AD_);
-
+parameters = data_prep(number_of_averages, active_layers, x, y, t);
     factors = [1];
     all_params = {};
     for factor=factors
@@ -285,53 +290,53 @@ plot_map(parameters, final_errors, true)
 save(filename, "result", '-append')
 
 %% Bootstrapp
-
-n_bootstraps = 50;
-
-all_theta = zeros(n_bootstraps,length(theta_start));
-factor = 1;
-complete_dataset = parameters.dataset_idx;
-
-parameters.calculate_W = false;
-
-for i = 1:n_bootstraps
-    % 
-    rng('shuffle');
-    parameters.U = rand(size(parameters.A));
-    % n = size(complete_dataset, 1); % Number of points in the dataset
-    % % Generate n random indices between 1 and n
-    % random_indices = randi(n, n, 1);
-    % % Use the indices to sample points from the dataset
-    % sampled_dataset = complete_dataset(random_indices, :);
-    % parameters.dataset_idx = sampled_dataset;
-
-
-    objective_function = @(theta) optimize_model(theta, parameters, factor);
-    % theta_start = theta_start*factor;
-
-    options = optimoptions('fminunc', ...
-            'Display', 'iter', ...
-            'Algorithm', 'trust-region', ...
-            'HessianFcn','objective', ...
-            'SpecifyObjectiveGradient',true, ...
-            'StepTolerance', 1e-4*factor, ...,
-            "FiniteDifferenceStepSize", 0.1*factor, ...,
-            "FunctionTolerance",0.00001, ...
-            "OptimalityTolerance",2e-6/factor, ...
-            'MaxFunctionEvaluations', 10000, ...
-            'MaxIterations', 10000, ...
-            'OutputFcn', @saveIterations, ... % Call the custom function
-            "UseParallel", true);
-
-    % Run fminunc
-    
-    [theta, fval, exitflag, output, grad, hessian] = fminunc(objective_function, theta_start, options);
-    theta = theta/factor;
-    
-    result = run_model(parameters,theta);
-    disp(result.squared_error)
-    disp("New minimum found")
-    disp(theta);
-    all_theta(i,:) = theta;
-end
-save(filename, "all_theta", '-append')
+% 
+% n_bootstraps = 50;
+% 
+% all_theta = zeros(n_bootstraps,length(theta_start));
+% factor = 1;
+% complete_dataset = parameters.dataset_idx;
+% 
+% parameters.calculate_W = false;
+% 
+% for i = 1:n_bootstraps
+%     % 
+%     rng('shuffle');
+%     parameters.U = rand(size(parameters.A));
+%     % n = size(complete_dataset, 1); % Number of points in the dataset
+%     % % Generate n random indices between 1 and n
+%     % random_indices = randi(n, n, 1);
+%     % % Use the indices to sample points from the dataset
+%     % sampled_dataset = complete_dataset(random_indices, :);
+%     % parameters.dataset_idx = sampled_dataset;
+% 
+% 
+%     objective_function = @(theta) optimize_model(theta, parameters, factor);
+%     % theta_start = theta_start*factor;
+% 
+%     options = optimoptions('fminunc', ...
+%             'Display', 'iter', ...
+%             'Algorithm', 'trust-region', ...
+%             'HessianFcn','objective', ...
+%             'SpecifyObjectiveGradient',true, ...
+%             'StepTolerance', 1e-4*factor, ...,
+%             "FiniteDifferenceStepSize", 0.1*factor, ...,
+%             "FunctionTolerance",0.00001, ...
+%             "OptimalityTolerance",2e-6/factor, ...
+%             'MaxFunctionEvaluations', 10000, ...
+%             'MaxIterations', 10000, ...
+%             'OutputFcn', @saveIterations, ... % Call the custom function
+%             "UseParallel", true);
+% 
+%     % Run fminunc
+% 
+%     [theta, fval, exitflag, output, grad, hessian] = fminunc(objective_function, theta_start, options);
+%     theta = theta/factor;
+% 
+%     result = run_model(parameters,theta);
+%     disp(result.squared_error)
+%     disp("New minimum found")
+%     disp(theta);
+%     all_theta(i,:) = theta;
+% end
+% save(filename, "all_theta", '-append')
