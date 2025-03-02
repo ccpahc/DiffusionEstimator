@@ -77,25 +77,37 @@ function parameters = data_prep(n_averages, active_layers, lats, lons, years)
     end
 
     if active_layers(5)
-        tmean = tmean.data;
-        tmean = tmean(latidx,lonidx);
-        tmean_mean = mean(tmean(:));
-        tmean_std = std(tmean(:));
-        tmean = (tmean-tmean_mean)/tmean_std;
-        X{length(X)+1} = tmean;
-    end
+        trace_dat = trace.data;
+        time_mask = (trace.time >= parameters.start_time) & (trace.time <= parameters.end_time);
+        selected_data = trace_dat(:, :, time_mask);
+        trace_dat = mean(selected_data,3);
+        trace_dat = trace_dat(latidx,lonidx);
 
-    if active_layers(6)
-        prec = prec.data;
-        prec = prec(latidx,lonidx);
-        prec_mean = mean(prec(:));
-        prec_std = std(prec(:));
-        prec = (prec-prec_mean)/prec_std;
-        X{length(X)+1} = prec;
+        trace_mean = mean(trace_dat(:));
+        trace_std = std(trace_dat(:));
+        trace_dat = (trace_dat - trace_mean)/trace_std;
+        X{length(X)+1} = trace_dat;
     end
+    %     tmean = tmean.data;
+    %     tmean = tmean(latidx,lonidx);
+    %     tmean_mean = mean(tmean(:));
+    %     tmean_std = std(tmean(:));
+    %     tmean = (tmean-tmean_mean)/tmean_std;
+    %     X{length(X)+1} = tmean;
+    % end
+    % 
+    % if active_layers(6)
+    %     prec = prec.data;
+    %     prec = prec(latidx,lonidx);
+    %     prec_mean = mean(prec(:));
+    %     prec_std = std(prec(:));
+    %     prec = (prec-prec_mean)/prec_std;
+    %     X{length(X)+1} = prec;
+    % end
+
 
     if length(active_layers) > 6
-        for i = 5:length(active_layers)
+        for i = 6:length(active_layers)
             if active_layers(i)
                 layer = potveg(i-4).pot_veg_data;
                 layer = layer(latidx,lonidx);
@@ -116,6 +128,9 @@ function parameters = data_prep(n_averages, active_layers, lats, lons, years)
     rng(12)
     % parameters.U = rand([size(parameters.A) n_averages]);
     parameters.n = n_averages;
+    W = W(latidx,lonidx);
+    parameters.W = W/max(W(:));
     parameters.active_layers = active_layers;
+    
 
 end

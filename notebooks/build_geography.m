@@ -41,7 +41,7 @@ lon = -180+delta/2:delta:180-delta/2;
 
 [lonmtx, latmtx] = meshgrid(lon, lat);
 
-save(filename);
+save(filename,'-v7.3');
 
 
 %% Weights Grid
@@ -50,10 +50,45 @@ w = cos(lat/90);
 
 W = repmat(w',1,length(lon));
 
-save([pwd '/data/prep/geography.mat'], 'W', '-append');
+save(filename, 'W', '-append');
 
 clear w
+%% Trace data
 
+disp('Trace Data')
+
+fn = 'data/raw/trace/TraCE-21K-II.ann.TS.nc';
+ncid = netcdf.open(fn);
+data_lat = netcdf.getVar(ncid,1);
+data_lat(1) = lat(1);
+data_lat(end) = lat(end);
+data_lon = netcdf.getVar(ncid,2);
+data_lon(data_lon>180) = data_lon(data_lon>180)-360;
+data_lon(1) = lon(1);
+data_lon(length(data_lon)/2) = lon(end);
+[data_lon, lon_indices] = sort(data_lon);
+time = 2000 + netcdf.getVar(ncid,3)*1000;
+
+fn = 'data/raw/trace/TraCE-21K-II.ann.PRECT.nc';
+ncid = netcdf.open(fn);
+data = netcdf.getVar(ncid,1);
+data = data(lon_indices,:,:);
+[old_lon_grid, old_lat_grid] = meshgrid(data_lon, data_lat);
+[new_lon_grid, new_lat_grid] = meshgrid(lon, lat);
+
+interp_data = zeros(length(lat), length(lon), length(time));
+for i = 1:length(time)
+    dat = data(:,:,i)';
+    interp_data(:,:,i) = (interp2(old_lon_grid, old_lat_grid, dat, new_lon_grid, new_lat_grid,'spline'));
+end
+
+trace = struct( ...
+    'data', interp_data, ...
+    'lat', lat, ...
+    'lon', lon, ...
+    'time', time);
+
+save(filename, 'trace', '-append')
 
 %% SAGE Potential Vegetation NetCDF Data
 
@@ -251,7 +286,6 @@ for f = 1:length(filenames)
     hdrfile = strcat(directory, filenames{f}, '.hdr');
     hdr = importdata(hdrfile, '\t');
 
-
     for k=1:length(hdr)
         hdr{k} = regexp(hdr{k},'\s+','split');
     end
@@ -271,11 +305,14 @@ for f = 1:length(filenames)
     data = flipud(data);
 
     % Actual delta
-    delta_act = 1/120;
+    delta_x = 1/10;
+    delta_y = 1/10.;
+    [size_x, size_y] = size(data);
+    new_x = round(size_x * delta_x / delta); 
+    new_y = round(size_y * delta_y / delta); 
 
-    if delta ~= delta_act
-        data = imresize(data, delta_act/delta, 'bilinear', delta/delta_act);
-    end
+    data = imresize(data, [new_x, new_y], 'bilinear');
+
     if f == 1
         data_all = data;
     elseif f > 1
@@ -320,11 +357,14 @@ for f = 1:length(filenames)
     data = flipud(data);
 
     % Actual delta
-    delta_act = 1/120;
+    delta_x = 1/10;
+    delta_y = 1/10.;
+    [size_x, size_y] = size(data);
+    new_x = round(size_x * delta_x / delta); 
+    new_y = round(size_y * delta_y / delta); 
 
-    if delta ~= delta_act
-        data = imresize(data, delta_act/delta, 'bilinear', delta/delta_act);
-    end
+    data = imresize(data, [new_x, new_y], 'bilinear');
+
     if f == 1
         data_all = data;
     elseif f > 1

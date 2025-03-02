@@ -33,10 +33,25 @@ function local_speeds = compute_local_speeds(x, y, t)
     end
 end
 
-active_layers = [1 0 0 1 0];
-cobo = readtable( ...
-     'data/raw/cobo_etal/cobo_etal_data.xlsx');
-parameters = data_prep(50, active_layers, cobo.Latitude, cobo.Longitude, cobo.Est_DateMean_BC_AD_);
+active_layers = [1 0 1 0 1 0 0];
+% cobo = readtable( ...
+%      'data/raw/cobo_etal/cobo_etal_data.xlsx');
+% load pinhasi
+pinhasi = readtable( ...
+    'data/raw/pinhasi/Neolithic_timing_Europe_PLOS.xls');
+
+pinhasi = pinhasi(pinhasi.Var1 == "SITE",:); %% keep only site rows
+
+pinhasi = renamevars(pinhasi, {'Latitude', 'Longitude', 'CALC14BP'}, ...
+    {'lat', 'lon', 'bp'});
+
+pinhasi = pinhasi(:,{'lat', 'lon', 'bp'});
+pinhasi.bp = 2000 - pinhasi.bp; % from BP to year
+
+x = pinhasi.lat;
+y = pinhasi.lon;
+t = pinhasi.bp;
+parameters = data_prep(50, active_layers, x, y, t);
 
 theta_0 = -1.3351;
 theta_1 = 1.5267;

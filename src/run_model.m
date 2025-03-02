@@ -33,7 +33,7 @@ function result = run_model(parameters, theta)
     data_times = parameters.dataset_idx(:,3);
 
     for rep = 1:parameters.n
-        U = rand(size(A_start));
+        U = rand(size(A_start)).*parameters.W;
         % Run the model for each instance
         if calculate_W == false
             [A, exfl1] = run_model_av(A_start, nt, theta, X, U, active_layers);

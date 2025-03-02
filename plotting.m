@@ -1,4 +1,4 @@
-active_layers = [1 0 1 0 1];
+active_layers = [1 0 1 0 1 0 0];
 % load pinhasi
 pinhasi = readtable( ...
     'data/raw/pinhasi/Neolithic_timing_Europe_PLOS.xls');
@@ -183,4 +183,16 @@ hold off;
 
 %% Plot outliers
 
-plot_map(parameters_3,result_3.errors,true, result_3.A)
+theta = [-1.792, 0.448];
+loc = 10;
+fwidth = 20;
+f = figure('Units','inches','Position',[loc loc fwidth fwidth/2.2], ...
+    'PaperPosition',[.25 .25 8 6]);
+R = georefcells(parameters.lat, parameters.lon, ...
+        size(parameters.X{1}));
+latlim = parameters.lat;
+lonlim = parameters.lon;
+worldmap(latlim, lonlim)
+axis xy
+
+geoshow(parameters.X{1}, R, 'DisplayType', 'texturemap')
