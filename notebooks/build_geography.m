@@ -259,14 +259,14 @@ data = imread(fn);
 delta_act = 1/12;
 
 delta_rel = delta/delta_act;
-csidata = nan(round(delta_rel*length(lat)), round(delta_rel*length(lon)));
+csidata = zeros(round(delta_rel*length(lat)), round(delta_rel*length(lon)));
 csidata(round(delta_rel*length(lat)-size(data,1)+1):end,:) = data;
 
 if delta ~= delta_act
     csidata = imresize(csidata, [length(lat) length(lon)]);
 end
 
-csidata(csidata == -9) = 0;
+csidata(csidata < 0) = 0;
 
 csidata = flipud(csidata);
 
