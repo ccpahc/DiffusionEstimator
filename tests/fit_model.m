@@ -11,7 +11,7 @@ load = false;
 if load == false
 
     number_of_averages = 100;
-    filename = 'generated_data/pinhasi_av_csi';
+    filename = 'generated_data/pinhasi_av_hydro_tmean';
     filename = filename + string(number_of_averages);
     filename = filename + "_";
     filename = filename + string(t);
@@ -35,22 +35,22 @@ end
 if level < 1
     
     % Average diffusion
-    average_range = [-2.0, 2.0];
+    average_range = [-1.0, 1.0];
     anisotropy_range = [0.0, 0.0];
     % csi
-    csi_range = [-0.0, 4.0]; 
+    csi_range = [0.0, 0.0]; 
     % hydro
-    hydro_range = [0.0, 0.0];
+    hydro_range = [-1.0, 1.0];
     % mean temp 
-    tmean_range = [.0, .0];
-    % precipitation
     prec_range = [0.0, 0.0];
+    % precipitation
+    tmean_range = [-1.0, 1.0];
 
-    ranges = [average_range; anisotropy_range; csi_range; hydro_range; tmean_range; prec_range];
+    ranges = [average_range; anisotropy_range; csi_range; hydro_range; prec_range; tmean_range];
 
     sage_layers = [];
     
-    for i = 0:16
+    for i = 0:16,
         if ismember(i,sage_layers)
             ranges = [ranges; [-2.0 2.0]];
         else
@@ -165,11 +165,11 @@ end
 
 if level < 4
     parameters.n = 20;
-    [theta_start, on_edge, min_error, errors] = sweep(ranges, 6, 2, parameters);
+    [theta_start, on_edge, min_error, errors] = sweep(ranges, 11, 2, parameters);
 
     ranges = [0.8 1.2].*theta_start';  
 
-    [theta_start, on_edge, min_error, errors] = sweep(ranges, 6, 1, parameters);
+    [theta_start, on_edge, min_error, errors] = sweep(ranges, 11, 1, parameters);
 
     parameters.n = number_of_averages;
     level = 4;
@@ -210,19 +210,26 @@ function stop = saveIterations(x, optimValues, state)
         paramsHistory = [paramsHistory; x]; 
         assignin('base', 'paramsHistory', paramsHistory); % Save to workspace
     end
-
-    % No stopping criterion
     stop = false;
+    % No stopping criterion
+    if length(paramsHistory)>5
+        latest_thetas = paramsHistory(end-4:end,:);
+        ref = latest_thetas(1,:);
+        if all(latest_thetas == ref,'all')
+            stop = true;
+        end
+    end
+
 end
 
 if level < 5
     % parameters = data_prep(number_of_averages, active_layers, x, y, t);
-    factors = [1];
+    factors = [1e4];
     all_params = {};
     for factor=factors
     
         objective_function = @(theta) optimize_model(theta, parameters, 1e7);
-        theta_start = theta_start*factor;
+        theta_start = theta_start;
         
         % WITH GRADIENT
         options = optimoptions('fminunc', ...
@@ -230,33 +237,20 @@ if level < 5
             'Algorithm', 'trust-region', ...
             'HessianFcn','objective', ...
             'SpecifyObjectiveGradient',true, ...
-            'StepTolerance', 5e-3*factor, ...,
-            "FiniteDifferenceStepSize", 0.001*factor, ...,
+            'StepTolerance', 5e-3, ...,
+            "FiniteDifferenceStepSize", 0.001, ...,
             "FunctionTolerance",0.00001, ...
-            "OptimalityTolerance",2e-6/factor, ...
+            "OptimalityTolerance",2e-6, ...
             'MaxFunctionEvaluations', 10000, ...
             'MaxIterations', 10000, ...
             'OutputFcn', @saveIterations, ... % Call the custom function
             "UseParallel", true);
-
-        % % WITHOUT GRADIENT
-        % options = optimoptions('fminunc', ...
-        %     'Display', 'iter', ...
-        %     'Algorithm', 'quasi-newton', ...
-        %     'SpecifyObjectiveGradient', false, ... % Use numerical gradients
-        %     'HessianFcn', [], ... % Use numerical Hessian
-        %     'MaxFunctionEvaluations', 10000, ...
-        %     "FiniteDifferenceStepSize", 5e-2*factor, ...,
-        %     'OutputFcn', @saveIterations, ... % Call the custom function
-        %     'MaxIterations', 10000);
-       
-        % Run fminunc
         
         [theta, fval, exitflag, output, grad, hessian] = fminunc(objective_function, theta_start, options);
 
         
-        theta = theta/factor;
-        theta_start = theta_start/factor;
+        theta = theta;
+        theta_start = theta_start;
         
         result = run_model(parameters,theta);
         
@@ -280,15 +274,16 @@ if level < 5
 end
 
 %%
-[error, grad, hessian] = optimize_model(theta_optim, parameters, 1);
-parameters.calculate_W = true;
-result = run_model(parameters,theta_optim);
-parameters.calculate_W = false;
-jacobian = grad*grad';
-var_mat = 1/length(parameters.dataset_idx) * (hessian)^-1 * (jacobian) * (hessian)^-1;
-standard_errors = sqrt(diag(var_mat))
+% [error, grad, hessian] = optimize_model(theta_optim, parameters, 1);
+% parameters.calculate_W = true;
+% result = run_model(parameters,theta_optim);
+% parameters.calculate_W = false;
+% jacobian = grad*grad';
+% var_mat = 1/length(parameters.dataset_idx) * (hessian)^-1 * (jacobian) * (hessian)^-1;
+% standard_errors = sqrt(diag(var_mat))
 
 %% report results
+result = run_model(parameters,theta_optim);
 runtime = toc;
 A = result.A;
 final_errors = result.errors;
@@ -296,6 +291,13 @@ times = result.times;
 
 disp('Final result:');
 disp(theta_optim);
+
+probabilities = 1./(1 + exp(- (theta_optim)));
+disp('Probabilities:');
+disp(probabilities);
+
+disp('Speeds (km/decade):');
+disp(probabilities*110.567/4);
 
 plot_map(parameters, final_errors, true)
 
