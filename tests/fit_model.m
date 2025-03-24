@@ -11,10 +11,15 @@ load_data = false;
 if load_data == false
 
     number_of_averages = 100;
-    filename = 'generated_data/wheat_av_csi';
-    filename = filename + string(number_of_averages);
-    filename = filename + "_";
-    filename = filename + string(t);
+    dataset = 'cobo';
+    layers = {'av'}; %full {'av' 'asym' 'csi','hydro' 'prec' 'tmean'}
+    sage_layers = []; % numbers 0 to 16
+    directory = 'generated_data/';
+    filename = [directory dataset '_'];
+    filename = [filename strjoin(layers,'_') '_'];
+    filename = [filename string(number_of_averages) 'av_'];
+    filename = [filename string(t)];
+    filename = strjoin(filename,'');
     level = 0;
     
     save(filename, "number_of_averages");
@@ -35,16 +40,40 @@ end
 if level < 1
     
     % Average diffusion
-    average_range = [-1.0, 1.0];
-    anisotropy_range = [0.0, 0.0];
+    if ismember('av',layers)
+        average_range = [-1.0, 1.0];
+    else
+        average_range = [0.0, 0.0];
+    end
+    if ismember('asym',layers)
+        anisotropy_range = [-1, 1];
+    else
+        anisotropy_range = [0.0, 0.0];
+    end
     % csi
-    csi_range = [-2.0, 2.0]; 
+    if ismember('csi', layers)
+        csi_range = [-1.0, 1.0];
+    else
+        csi_range = [-0.0, 0.0]; 
+    end
     % hydro
-    hydro_range = [0.0, 0.0];
-    % mean temp 
-    prec_range = [.0, .0];
+    if ismember('hydro', layers)
+        hydro_range = [-1, 1];
+    else
+        hydro_range = [0.0, 0.0];
+    end
     % precipitation
-    tmean_range = [.0, .0];
+    if ismember('prec', layers)
+        prec_range = [-2, 2];
+    else
+        prec_range = [0.0, 0.0];
+    end
+    % mean temp
+    if ismember('tmean',layers)
+        tmean_range = [-1, 1];
+    else
+        tmean_range = [.0, .0];
+    end
 
     ranges = [average_range; anisotropy_range; csi_range; hydro_range; prec_range; tmean_range];
 
@@ -74,7 +103,6 @@ addpath('src');
  
 if level < 2
 
-    dataset = 'all_wheat';
     [x,y,t] = get_dataset(dataset);
 
     parameters = data_prep(number_of_averages, active_layers, x, y, t);
@@ -262,15 +290,15 @@ A = result.A;
 final_errors = result.errors;
 times = result.times;
 
-disp('Final result:');
-disp(theta_optim);
+theta_str = sprintf("%s", strip(strip(sprintf("%.2f, ", theta_optim), " "),","));
+disp('Final result: ['+theta_str+']');
 
 probabilities = 1./(1 + exp(- (theta_optim)));
-disp('Probabilities:');
-disp(probabilities);
+prob_str = sprintf("%s", strip(strip(sprintf("%.2f, ", probabilities), " "),","));
+disp('Probabilities: ['+prob_str+']');
 
-disp('Speeds (km/decade):');
-disp(probabilities*110.567/4);
+speed_str = sprintf("%s", strip(strip(sprintf("%.2f, ", probabilities*110.567/4), " "),","));
+disp('Speeds (km/decade): ['+prob_str+']');
 
 plot_map(parameters, final_errors, true)
 
