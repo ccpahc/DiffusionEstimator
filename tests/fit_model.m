@@ -14,11 +14,17 @@ if load_data == false
     dataset = 'cobo'; %options: 'cobo','pinhasi','all_wheat'
     layers = {'av','tmean','sea'}; %full {'av' 'asym' 'csi','hydro' 'prec' 'tmean'}
     directory = 'generated_data/';
+
+    %create filename
     filename = [directory dataset '_'];
     filename = [filename strjoin(layers,'_') '_'];
+    for s = sage_layers
+        filename = [filename 'sage' string(s) '_'];
+    end
     filename = [filename string(number_of_averages) 'av_'];
     filename = [filename string(t)];
     filename = strjoin(filename,'');
+
     level = 0;
     
     save(filename, "number_of_averages");
@@ -297,7 +303,12 @@ disp('Speeds (km/decade): ['+speed_str+']');
 
 disp('Squared error: ' + string(result.squared_error))
 disp('Error in years: ' + string(sqrt(mean(result.squared_error))))
+disp('Speeds (km/decade): ['+speed_str+']');
 
+disp('Squared error: ' + string(result.squared_error))
+disp('Error in years: ' + string(sqrt(mean(result.squared_error))))
+
+save(filename, "result", '-append')
 save(filename, "result", '-append')
 plot_map(parameters, final_errors, true)
 
