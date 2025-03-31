@@ -11,23 +11,20 @@ load_data = false;
 if load_data == false
 
     number_of_averages = 100;
-    dataset = 'cobo'; %options: 'cobo','pinhasi','all_wheat'
+    dataset = 'all_wheat'; %options: 'cobo','pinhasi','all_wheat'
     layers = {'av','tmean','sea'}; %full {'av' 'asym' 'csi','hydro' 'prec' 'tmean'}
     directory = 'generated_data/';
 
     %create filename
     filename = [directory dataset '_'];
     filename = [filename strjoin(layers,'_') '_'];
-    for s = sage_layers
-        filename = [filename 'sage' string(s) '_'];
-    end
     filename = [filename string(number_of_averages) 'av_'];
     filename = [filename string(t)];
     filename = strjoin(filename,'');
 
     level = 0;
     
-    save(filename, "number_of_averages");
+    save(filename, 'number_of_averages','layers','filename');
 
 end
 
@@ -225,6 +222,7 @@ function stop = saveIterations(x, optimValues, state)
 end
 
 if level < 5
+    tic
     % parameters = data_prep(number_of_averages, active_layers, x, y, t);
     factors = [1e6];
     all_params = {};
@@ -246,7 +244,7 @@ if level < 5
             'MaxFunctionEvaluations', 10000, ...
             'MaxIterations', 10000, ...
             'OutputFcn', @saveIterations, ... % Call the custom function
-            "UseParallel", true);
+            "UseParallel", false);
         
         [theta, fval, exitflag, output, grad, hessian] = fminunc(objective_function, theta_start, options);
 
@@ -273,6 +271,7 @@ if level < 5
 
     level = 5;
     save(filename, 'theta_optim', "level", "min_error", "all_params", '-append')
+    print(toc)
 end
 
 %%
@@ -303,13 +302,9 @@ disp('Speeds (km/decade): ['+speed_str+']');
 
 disp('Squared error: ' + string(result.squared_error))
 disp('Error in years: ' + string(sqrt(mean(result.squared_error))))
-disp('Speeds (km/decade): ['+speed_str+']');
 
-disp('Squared error: ' + string(result.squared_error))
-disp('Error in years: ' + string(sqrt(mean(result.squared_error))))
+% save(filename, "result", '-append')
 
-save(filename, "result", '-append')
-save(filename, "result", '-append')
 plot_map(parameters, final_errors, true)
 
 %% Bootstrapp

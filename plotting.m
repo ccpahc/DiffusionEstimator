@@ -38,7 +38,7 @@ function [x,y,c] = get_plot_coords(parameters, result)
     
     % Create a colormap by interpolating between these colors:
     cmap = interp1([1, 128, 256], [color1; color2; color3], linspace(1, 256, numColors));
-    x = parameters.dataset_idx(:,3)+parameters.start_time;
+    x = parameters.dataset_bp;
     y = result.errors;
     [x, x_ind] = sort(x);
     y = y(x_ind);
@@ -278,3 +278,64 @@ speeds = speeds*110.567/4;
 p = pcolor(X,Y, speeds);
 set(p, 'EdgeColor', 'none');
 clim([0,max(speeds(:))])
+
+%%
+% old tmean
+load('/Users/mperuzzo/Documents/repos/bottlenecks/generated_data/cobo_av_tmean_100av_2025-03-24_13-30.mat')
+x = parameters;
+y = result;
+
+[x,y,colors] = get_plot_coords(x, y);
+subplot(3, 1, 1)
+hold on;
+for i = 1:length(x)
+    line([x(i), x(i)], [0, y(i)/1000], 'Color', colors(i, :), 'LineWidth', 1);
+end
+
+
+scatter(x, y/1000, 10, colors, 'filled');
+ylim([-5,5])
+grid on;
+ylabel('Error (kyrs)','FontSize',14);
+title('old tmean')
+
+% new_tmean
+load('/Users/mperuzzo/Documents/repos/bottlenecks/generated_data/cobo_av_tmean_100av_2025-03-26_21-16.mat')
+
+x = parameters;
+y = result;
+
+[x,y,colors] = get_plot_coords(x, y);
+subplot(3, 1, 2)
+hold on;
+for i = 1:length(x)
+    line([x(i), x(i)], [0, y(i)/1000], 'Color', colors(i, :), 'LineWidth', 1);
+end
+
+
+scatter(x, y/1000, 10, colors, 'filled');
+ylim([-5,5])
+grid on;
+ylabel('Error (kyrs)','FontSize',14);
+title('new tmean')
+
+% new_tmean + sea
+load('/Users/mperuzzo/Documents/repos/bottlenecks/generated_data/cobo_av_tmean_sea_100av_2025-03-27_10-32.mat')
+result = run_model(parameters, theta_optim);
+x = parameters;
+y = result;
+
+
+[x,y,colors] = get_plot_coords(x, y);
+subplot(3, 1, 3)
+hold on;
+for i = 1:length(x)
+    line([x(i), x(i)], [0, y(i)/1000], 'Color', colors(i, :), 'LineWidth', 1);
+end
+
+
+scatter(x, y/1000, 10, colors, 'filled');
+ylim([-5,5])
+grid on;
+ylabel('Error (kyrs)','FontSize',14);
+title('new tmean + sea')
