@@ -15,8 +15,8 @@ parameters = data_prep(50, active_layers, x, y, t);
 if strcmp(dataset,'cobo')
     parameters.A(76,39,46) = true;
 end
-ranges = [[1 2.]; [-4.0,-3.0]];
-n_points = 51;
+ranges = [[1.5 2.5]; [-4.0,-3.0]];
+n_points = 21 ;
 [theta_min, on_edge, min_error, errors] = sweep(ranges, n_points, 0, parameters);
 theta_0 = linspace(ranges(1,1), ranges(1,2), n_points);
 theta_1 = linspace(ranges(2,1), ranges(2,2), n_points);

@@ -29,7 +29,15 @@ function result = run_model(parameters, theta)
         W = 0;
     end
 
-    rng(12)
+    if isfield(parameters,'random')
+        if parameters.random == true
+            rng('shuffle')
+        elseif parameters.random == false
+            rng(12)
+        end
+    else
+        rng(12)
+    end
     data_times = parameters.dataset_idx(:,3);
 
     for rep = 1:parameters.n

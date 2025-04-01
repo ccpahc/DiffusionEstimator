@@ -7,6 +7,7 @@ t = datetime;
 t.Format = 'yyyy-MM-dd_HH-mm';
 % choose whether to load or start
 load_data = false;
+get_errors = false;
 
 %%
 if load_data == false
@@ -271,53 +272,57 @@ disp('Error in years: ' + string(sqrt(mean(result.squared_error))))
 plot_map(parameters, final_errors, true)
 
 %% Bootstrapp
-% 
-% n_bootstraps = 50;
-% 
-% all_theta = zeros(n_bootstraps,length(theta_start));
-% factor = 1;
-% complete_dataset = parameters.dataset_idx;
-% 
-% parameters.calculate_W = false;
-% 
-% for i = 1:n_bootstraps
-%     % 
-%     rng('shuffle');
-%     parameters.U = rand(size(parameters.A));
-%     % n = size(complete_dataset, 1); % Number of points in the dataset
-%     % % Generate n random indices between 1 and n
-%     % random_indices = randi(n, n, 1);
-%     % % Use the indices to sample points from the dataset
-%     % sampled_dataset = complete_dataset(random_indices, :);
-%     % parameters.dataset_idx = sampled_dataset;
-% 
-% 
-%     objective_function = @(theta) optimize_model(theta, parameters, factor);
-%     % theta_start = theta_start*factor;
-% 
-%     options = optimoptions('fminunc', ...
-%             'Display', 'iter', ...
-%             'Algorithm', 'trust-region', ...
-%             'HessianFcn','objective', ...
-%             'SpecifyObjectiveGradient',true, ...
-%             'StepTolerance', 1e-4*factor, ...,
-%             "FiniteDifferenceStepSize", 0.1*factor, ...,
-%             "FunctionTolerance",0.00001, ...
-%             "OptimalityTolerance",2e-6/factor, ...
-%             'MaxFunctionEvaluations', 10000, ...
-%             'MaxIterations', 10000, ...
-%             'OutputFcn', @saveIterations, ... % Call the custom function
-%             "UseParallel", true);
-% 
-%     % Run fminunc
-% 
-%     [theta, fval, exitflag, output, grad, hessian] = fminunc(objective_function, theta_start, options);
-%     theta = theta/factor;
-% 
-%     result = run_model(parameters,theta);
-%     disp(result.squared_error)
-%     disp("New minimum found")
-%     disp(theta);
-%     all_theta(i,:) = theta;
-% end
-% save(filename, "all_theta", '-append')
+
+if get_errors
+    n_bootstraps = 50;
+    
+    all_theta = zeros(n_bootstraps,length(theta_start));
+    all_errors = zeros(n_bootstraps, 1);
+    factor = 1;
+    complete_dataset = parameters.dataset_idx;
+    
+    parameters.calculate_W = false;
+    
+    for i = 1:n_bootstraps
+        % 
+        rng('shuffle');
+        parameters.U = rand(size(parameters.A));
+        % n = size(complete_dataset, 1); % Number of points in the dataset
+        % % Generate n random indices between 1 and n
+        % random_indices = randi(n, n, 1);
+        % % Use the indices to sample points from the dataset
+        % sampled_dataset = complete_dataset(random_indices, :);
+        % parameters.dataset_idx = sampled_dataset;
+    
+    
+        objective_function = @(theta) optimize_model(theta, parameters, factor);
+        % theta_start = theta_start*factor;
+    
+        options = optimoptions('fminunc', ...
+                'Display', 'iter', ...
+                'Algorithm', 'trust-region', ...
+                'HessianFcn','objective', ...
+                'SpecifyObjectiveGradient',true, ...
+                'StepTolerance', 1e-4, ...,
+                "FiniteDifferenceStepSize", 0.01, ...,
+                "FunctionTolerance",0.00001, ...
+                "OptimalityTolerance",2e-6, ...
+                'MaxFunctionEvaluations', 10000, ...
+                'MaxIterations', 10000, ...
+                'OutputFcn', @saveIterations, ... % Call the custom function
+                "UseParallel", true);
+    
+        % Run fminunc
+    
+        [theta, fval, exitflag, output, grad, hessian] = fminunc(objective_function, theta_start, options);
+        theta = theta/factor;
+    
+        result = run_model(parameters,theta);
+        disp(result.squared_error)
+        disp("New minimum found")
+        disp(theta);
+        all_theta(i,:) = theta;
+        all_errors(i) = result.squared_error;
+    end
+    save(filename, "all_theta", "all_errors", '-append')
+end
