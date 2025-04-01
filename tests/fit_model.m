@@ -1,6 +1,7 @@
 %% Start new run 
 
 clear all
+addpath("..\")
 tic
 t = datetime;
 t.Format = 'yyyy-MM-dd_HH-mm';
@@ -11,16 +12,13 @@ load_data = false;
 if load_data == false
 
     number_of_averages = 100;
-    dataset = 'cobo'; %options: 'cobo','pinhasi','all_wheat'
-    layers = {'av','tmean','sea'}; %full {'av' 'asym' 'csi','hydro' 'prec' 'tmean'}
+    dataset = 'all_wheat'; %options: 'cobo','pinhasi','all_wheat'
+    layers = {'av','asym'}; %full {'av' 'asym' 'csi','hydro' 'prec' 'tmean'}
     directory = 'generated_data/';
 
     %create filename
     filename = [directory dataset '_'];
     filename = [filename strjoin(layers,'_') '_'];
-    for s = sage_layers
-        filename = [filename 'sage' string(s) '_'];
-    end
     filename = [filename string(number_of_averages) 'av_'];
     filename = [filename string(t)];
     filename = strjoin(filename,'');
@@ -51,7 +49,7 @@ if level < 1
         average_range = [0.0, 0.0];
     end
     if ismember('asym',layers)
-        anisotropy_range = [-1, 1];
+        anisotropy_range = [-2, 2];
     else
         anisotropy_range = [0.0, 0.0];
     end
@@ -185,44 +183,6 @@ if level < 4
 end
 
 %% Level 5 - run optimizer
-
-function [error, grad, hessian] = optimize_model(theta, parameters, factor)
-    result = run_model(parameters, theta);
-    error = result.squared_error;
-    if nargout > 1
-        f = @(theta) run_model(parameters, theta).squared_error;
-        grad = calculateGradient(f, theta, 0.001, factor);
-    end
-    if nargout > 2
-        hessian = calculateHessian(f, theta, 0.001);
-    end
-end
-
-function stop = saveIterations(x, optimValues, state)
-    % Persistent variable to store the fitted parameters
-    persistent paramsHistory
-
-    % Initialize if the state is 'init'
-    if strcmp(state, 'init')
-        paramsHistory = []; % clear history at the beginning
-    end
-
-    % Append current parameters to the history during iterations
-    if strcmp(state, 'iter')
-        paramsHistory = [paramsHistory; x]; 
-        assignin('base', 'paramsHistory', paramsHistory); % Save to workspace
-    end
-    stop = false;
-    % No stopping criterion
-    if length(paramsHistory)>5
-        latest_thetas = paramsHistory(end-4:end,:);
-        ref = latest_thetas(1,:);
-        if all(latest_thetas == ref,'all')
-            stop = true;
-        end
-    end
-
-end
 
 if level < 5
     % parameters = data_prep(number_of_averages, active_layers, x, y, t);

@@ -1,7 +1,7 @@
 % save("sweep_1_avg_dt_20.mat", "errors", "terrain_theta", "x_theta", "y_theta",'final_As');
 
 % load("generated_data/Cobo_objective_functions/pinhasi_av_csi.mat")
-load("cobo_av_tmean.mat")
+load("cobo_av_asym.mat")
 
 [min_error, min_error_idx] = min(all_errors(:));
 [idx_0, idx_1, idx_2] = ind2sub(size(all_errors), min_error_idx);
