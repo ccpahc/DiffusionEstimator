@@ -2,6 +2,7 @@
 
 clear all
 addpath("..\")
+addpath("src")
 tic
 t = datetime;
 t.Format = 'yyyy-MM-dd_HH-mm';
@@ -13,8 +14,8 @@ get_errors = false;
 if load_data == false
 
     number_of_averages = 100;
-    dataset = 'all_wheat'; %options: 'cobo','pinhasi','all_wheat'
-    layers = {'av','asym'}; %full {'av' 'asym' 'csi','hydro' 'prec' 'tmean'}
+    dataset = 'maize'; %options: 'cobo','pinhasi','all_wheat'
+    layers = {'av','prec'}; %full {'av' 'asym' 'csi','hydro' 'prec' 'tmean'}
     directory = 'generated_data/';
 
     %create filename
@@ -188,7 +189,7 @@ end
 if level < 5
     tic
     % parameters = data_prep(number_of_averages, active_layers, x, y, t);
-    factors = [1e6];
+    factors = [1e8];
     all_params = {};
     for factor=factors
     
@@ -235,7 +236,7 @@ if level < 5
 
     level = 5;
     save(filename, 'theta_optim', "level", "min_error", "all_params", '-append')
-    print(toc)
+    disp(toc)
 end
 
 %%
@@ -286,36 +287,26 @@ if get_errors
     for i = 1:n_bootstraps
         % 
         rng('shuffle');
-        parameters.U = rand(size(parameters.A));
-        % n = size(complete_dataset, 1); % Number of points in the dataset
-        % % Generate n random indices between 1 and n
-        % random_indices = randi(n, n, 1);
-        % % Use the indices to sample points from the dataset
-        % sampled_dataset = complete_dataset(random_indices, :);
-        % parameters.dataset_idx = sampled_dataset;
-    
     
         objective_function = @(theta) optimize_model(theta, parameters, factor);
-        % theta_start = theta_start*factor;
     
         options = optimoptions('fminunc', ...
-                'Display', 'iter', ...
-                'Algorithm', 'trust-region', ...
-                'HessianFcn','objective', ...
-                'SpecifyObjectiveGradient',true, ...
-                'StepTolerance', 1e-4, ...,
-                "FiniteDifferenceStepSize", 0.01, ...,
-                "FunctionTolerance",0.00001, ...
-                "OptimalityTolerance",2e-6, ...
-                'MaxFunctionEvaluations', 10000, ...
-                'MaxIterations', 10000, ...
-                'OutputFcn', @saveIterations, ... % Call the custom function
-                "UseParallel", true);
+            'Display', 'iter', ...
+            'Algorithm', 'trust-region', ...
+            'HessianFcn','objective', ...
+            'SpecifyObjectiveGradient',true, ...
+            'StepTolerance', 5e-3, ...,
+            "FiniteDifferenceStepSize", 0.001, ...,
+            "FunctionTolerance",0.00001, ...
+            "OptimalityTolerance",2e-6, ...
+            'MaxFunctionEvaluations', 10000, ...
+            'MaxIterations', 10000, ...
+            'OutputFcn', @saveIterations, ... % Call the custom function
+            "UseParallel", false);
     
         % Run fminunc
     
         [theta, fval, exitflag, output, grad, hessian] = fminunc(objective_function, theta_start, options);
-        theta = theta/factor;
     
         result = run_model(parameters,theta);
         disp(result.squared_error)

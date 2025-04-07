@@ -9,7 +9,7 @@ function recentIdx = findMostRecentDateStruct(structArray)
     [~, recentIdx] = max(dates);
 end
 
-load('C:\Users\matil\OneDrive\Documents\Work\AlanTuring&Oxford\bottlenecks\generated_data\all_wheat_av_100av_2025-03-24_11-09.mat')
+load('C:\Users\matil\OneDrive\Documents\Work\AlanTuring_Oxford\bottlenecks\generated_data\all_wheat_av_100av_2025-03-24_11-09.mat')
 av_sq_err = result.squared_error;
 
 all_layers = {'csi' 'hydro' 'prec' 'tmean','sea'};
@@ -44,6 +44,7 @@ for idx1 = 1:length(all_layers)
         load(file)
         if ~any(strcmp({whos().name},'result'))
             result = run_model(parameters, theta_optim);
+            save(file, "result", '-append');
         end
         sq_errs(idx1,idx2) = result.squared_error;
         clear("result")
@@ -67,10 +68,10 @@ colorbar;
 title("Wheat")
 
 %%
-load('C:\Users\matil\OneDrive\Documents\Work\AlanTuring&Oxford\bottlenecks\generated_data\cobo_av100_2025-03-10_14-02.mat')
+load('C:\Users\matil\OneDrive\Documents\Work\AlanTuring_Oxford\bottlenecks\generated_data\cobo_av100_2025-03-10_14-02.mat')
 result = run_model(parameters, theta_optim);
 av_sq_err = result.squared_error;
-all_layers = {'csi' 'hydro' 'prec' 'tmean','sea'};
+all_layers = {'asym' 'csi' 'hydro' 'prec' 'tmean','sea'};
 sq_errs = zeros(length(all_layers));
 
 for idx1 = 1:length(all_layers)
@@ -102,6 +103,7 @@ for idx1 = 1:length(all_layers)
         load(file)
         if ~any(strcmp({whos().name},'result'))
             result = run_model(parameters, theta_optim);
+            save(file, "result", '-append');
         end
         sq_errs(idx1,idx2) = result.squared_error;
         clear("result")

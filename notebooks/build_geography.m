@@ -21,15 +21,15 @@ DESCRIPTION OF PROCESS
 clear
 clc
 
-delta = 1/2;
+delta = 1/4;
 
 clearvars -except delta
 
 disp('Build geography data ...')
 
-filename = 'data/prep/geography_0p5deg.mat';
+filename = 'data/prep/geography_0p25deg.mat';
 
-%% Prepare Template Raster
+%% Prepare Template Rater
 
 disp('Prepare template grid')
 
