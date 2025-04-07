@@ -18,7 +18,7 @@ function grad = calculateGradient(f, x0, epsilon, factor)
     grad = zeros(n, m);  % Initialize gradient vector
     
     % Compute gradient
-    parfor i = 1:n
+    for i = 1:n
         % Create perturbation vector
         e_i = zeros(1,n);
         e_i(i) = epsilon;

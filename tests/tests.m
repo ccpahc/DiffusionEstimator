@@ -41,14 +41,14 @@ if true
     % add text box with error value next to point with white background
     % annotation('textbox', [0.42 0.49 0.1 0.1], 'String', sprintf('error^{1/2} = %f', sqrt(min_error)*dt), 'EdgeColor', 'none', 'BackgroundColor', 'white', 'HorizontalAlignment', 'center', 'FontSize', 14);
     % max_abs_value = max(abs(all_grad(:)));
-    clim([min(all_errors(:)), 2.1e6]);
+    clim([min(all_errors(:)), 1.7e6]);
     
     % figure(2)
     % % plot magnitude of gradient of error in the first 2 dimensions
     % [all_grad_x, all_grad_y] = gradient(squeeze(all_errors(:,1,:)));
     % all_grad = sqrt(all_grad_x.^2 + all_grad_y.^2);
     % % pcolor(X,Y,all_grad')
-    % pcolor(X,Y,squeeze(flag_1)')
+    % pcolor(X,Y,squeeze(flag_1)
     % colormap(cmap)
     % xlabel("average diffusion speed")
     % ylabel("ratio")

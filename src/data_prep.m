@@ -2,7 +2,7 @@ function parameters = data_prep(n_averages, active_layers, lats, lons, years)
 
     parameters = struct();
     % load build
-    load('data/prep/geography_0p5deg.mat');
+    load('data/prep/geography_0p5deg.mat',"lat","lon","W");
 
     parameters.dataset_lat = lats;
     parameters.dataset_lon = lons;
@@ -47,57 +47,56 @@ function parameters = data_prep(n_averages, active_layers, lats, lons, years)
     X = {};
     % csi layer
     if active_layers(3)
+        load('data/prep/geography_0p5deg.mat',"csidata");
         % add csi data
-        % csi_mean = mean(csidata(:));
-        % csi_std = std(csidata(:));
-        % csidata = (csidata-csi_mean)./csi_std;
         csidata = csidata(latidx,lonidx);
         X{length(X)+1} = csidata;
+        clear csidata
     end
 
     % river layer
     if active_layers(4)
+        load('data/prep/geography_0p5deg.mat',"acc");
         hydro = acc.data;
-        % hydro(isnan(hydro)) = 0;
-        % hydro_mean = mean(hydro(:));
-        % hydro_std = std(hydro(:));
-        % hydro = (hydro-hydro_mean)/hydro_std;
+        clear acc
         hydro = hydro(latidx,lonidx);
         X{length(X)+1} = hydro;
+        clear hydro
     end
 
     % mean precipitation
     if active_layers(5)
+        load('data/prep/geography_0p5deg.mat',"trace");
         trace_dat = trace.prec;
-        % trace_mean = mean(trace_dat(:));
-        % trace_std = std(trace_dat(:));
-        % trace_dat = (trace_dat - trace_mean)/trace_std;
         time_mask = (trace.time >= parameters.start_time) & (trace.time <= parameters.end_time);
+        clear trace
         selected_data = trace_dat(:, :, time_mask);
         trace_dat = mean(selected_data,3);
         trace_dat = trace_dat(latidx,lonidx);
         X{length(X)+1} = trace_dat;
+        clear trace_dat
     end
 
     % mean surface temperature
     if active_layers(6)
-        % tmean = tmean.data;
-        % trace_dat = tmean;
+        load('data/prep/geography_0p5deg.mat',"trace");
         trace_dat = trace.temp;
-        % trace_mean = mean(trace_dat(:));
-        % trace_std = std(trace_dat(:));
-        % trace_dat = (trace_dat - trace_mean)/trace_std;
         time_mask = (trace.time >= parameters.start_time) & (trace.time <= parameters.end_time);
+        clear trace
         selected_data = trace_dat(:, :, time_mask);
         trace_dat = mean(selected_data,3);
         trace_dat = trace_dat(latidx,lonidx);
         X{length(X)+1} = trace_dat;
+        clear trace_dat
     end
 
     if active_layers(7)
+        load('data/prep/geography_0p5deg.mat',"sea");
         data = sea.data;
         data = data(latidx,lonidx);
         X{length(X)+1} = data;
+        clear sea
+        clear data
     end
 
     parameters.X = X;
@@ -116,5 +115,6 @@ function parameters = data_prep(n_averages, active_layers, lats, lons, years)
     parameters.W = W/max(W(:));
     parameters.active_layers = active_layers;
     
+    parameters.random = false;
 
 end

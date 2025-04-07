@@ -9,7 +9,7 @@ function plot_map(parameters,errors, adjust_scale, A_result)
     land = shaperead('landareas.shp', 'UseGeoCoords', true);
 
     R = georefcells(parameters.lat, parameters.lon, ...
-        size(parameters.X{1}));
+        size(parameters.A(:,:,1)));
     loc = 10;
     fwidth = 20;
     tic

@@ -35,8 +35,7 @@ function result = run_model(parameters, theta)
         elseif parameters.random == false
             rng(12)
         end
-    else
-        rng(12)
+
     end
     data_times = parameters.dataset_idx(:,3);
 

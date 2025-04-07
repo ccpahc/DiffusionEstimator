@@ -53,6 +53,13 @@ function [x,y,t] = get_dataset(dataset)
         x = cobo.Latitude;
         y = cobo.Longitude;
         t = cobo.Est_DateMean_BC_AD_;
+
+    elseif strcmp(dataset,'maize')
+
+        maize = readtable("data/raw/hart_maize/MaizeDataset_cleaned.csv");
+        x = maize.Latitude;
+        y = maize.Longitude;
+        t = maize.Year;
     else
         disp('dataset unknown')
     
