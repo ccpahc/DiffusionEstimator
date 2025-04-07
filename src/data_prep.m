@@ -115,6 +115,5 @@ function parameters = data_prep(n_averages, active_layers, lats, lons, years)
     parameters.W = W/max(W(:));
     parameters.active_layers = active_layers;
     
-    parameters.random = false;
 
 end

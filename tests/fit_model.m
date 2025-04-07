@@ -283,10 +283,11 @@ if get_errors
     complete_dataset = parameters.dataset_idx;
     
     parameters.calculate_W = false;
+    parameters = parameters.rmfield(parameters, random);
     
     for i = 1:n_bootstraps
         % 
-        rng('shuffle');
+        parameters.random = 10+3*i-1;
     
         objective_function = @(theta) optimize_model(theta, parameters, factor);
     

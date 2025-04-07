@@ -30,12 +30,9 @@ function result = run_model(parameters, theta)
     end
 
     if isfield(parameters,'random')
-        if parameters.random == true
-            rng('shuffle')
-        elseif parameters.random == false
-            rng(12)
-        end
-
+        rng(parameters.random)
+    else
+        rng(12)
     end
     data_times = parameters.dataset_idx(:,3);
 
