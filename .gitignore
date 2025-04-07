@@ -56,3 +56,7 @@ octave-workspace
 
 # ignore data/raw folder
 data/raw/
+
+# ignore output files 
+*.out
+*.sh
