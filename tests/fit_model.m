@@ -283,7 +283,9 @@ if get_errors
     complete_dataset = parameters.dataset_idx;
     
     parameters.calculate_W = false;
-    parameters = parameters.rmfield(parameters, random);
+    if isfield(parameters,'random')
+        parameters = parameters.rmfield(parameters, random);
+    end
     
     for i = 1:n_bootstraps
         % 
