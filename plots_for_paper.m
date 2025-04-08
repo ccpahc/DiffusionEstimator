@@ -51,7 +51,7 @@ tic
 f = figure (1);
 set(gcf, 'Color', 'White')
 f.Position = [100 100 900 400];
-subplot(1,2,2)
+% subplot(1,2,2)
 hold on;
 
 latlim = parameters.lat;
@@ -112,3 +112,35 @@ framem('FLineWidth', 1, 'FontSize', 7)
 
 scatterm(parameters.dataset_lat, parameters.dataset_lon, 5, parameters.times(parameters.dataset_idx(:,3)), 'filled');
 print(f, 'saved_plots/Diffusive_data.pdf', '-depsc')
+
+%% Model figure plots
+
+addpath('src');
+addpath("generated_data\")
+%%
+[x,y,t] = get_dataset("all_wheat");
+active_layers = [0 0 0 0 0 1 0 0]; %prec
+parameters = data_prep(1, active_layers, x, y, t);
+%%
+[nx,ny] = size(parameters.X{1});
+X = linspace(parameters.lat(1), parameters.lat(2), nx);
+Y = linspace(parameters.lon(1), parameters.lon(2), ny);
+f = figure(1);
+pepper_bright = brighten(pepper, 0.3);
+f.Position = [100 100 700 400];
+set(gcf, 'Color', 'White', 'Alphamap',0)
+[X,Y] = meshgrid(X,Y);
+s = mesh(X,Y,parameters.X{1}');
+s.FaceColor = 'flat';
+s.FaceAlpha = 1;
+view([45 60])
+xlim([min(X(:)), max(X(:))])
+ylim([min(Y(:)), max(Y(:))])
+colormap(pepper_bright)
+ax = gca;
+ax.FontSize = 16; 
+xlabel("Latitude", 'Rotation', -25, "FontSize",16)
+ylabel("Longitude", 'Rotation', 25, "FontSize",16)
+zlabel("Mean temperature", "FontSize",16)
+grid off
+saveas(gcf,"saved_plots/tmean_layer.pdf")

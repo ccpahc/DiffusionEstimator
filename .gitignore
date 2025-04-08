@@ -53,6 +53,7 @@ octave-workspace
 *.pdf
 *.gif
 *.fig
+*.sgv
 
 # ignore data/raw folder
 data/raw/

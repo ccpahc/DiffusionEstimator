@@ -12,8 +12,10 @@ end
 load('C:\Users\matil\OneDrive\Documents\Work\AlanTuring_Oxford\bottlenecks\generated_data\all_wheat_av_100av_2025-03-24_11-09.mat')
 av_sq_err = result.squared_error;
 
-all_layers = {'csi' 'hydro' 'prec' 'tmean','sea'};
+all_layers = {'asym' 'csi' 'hydro' 'prec' 'tmean','sea'};
 sq_errs = zeros(length(all_layers));
+
+database = {};
 
 for idx1 = 1:length(all_layers)
     l1 = all_layers(idx1);  % Get current layer from index
@@ -40,6 +42,13 @@ for idx1 = 1:length(all_layers)
         id = findMostRecentDateStruct(f);
         
         file = strjoin([f(id).folder "\" f(id).name], "");
+
+        metadata = struct();
+        metadata.dataset = "wheat";
+        metadata.file = file;
+        metadata.layers = layers;
+
+        database{length(database)+1} = metadata;
 
         load(file)
         if ~any(strcmp({whos().name},'result'))
@@ -99,6 +108,12 @@ for idx1 = 1:length(all_layers)
         id = findMostRecentDateStruct(f);
         
         file = strjoin([f(id).folder "\" f(id).name], "");
+        metadata = struct();
+        metadata.dataset = "rice";
+        metadata.file = file;
+        metadata.layers = layers;
+
+        database{length(database)+1} = metadata;
 
         load(file)
         if ~any(strcmp({whos().name},'result'))
@@ -110,6 +125,7 @@ for idx1 = 1:length(all_layers)
     end
 end
 sq_errors = 1 - sq_errs/av_sq_err;
+save("generated_data\filename_database.mat", "database")
 %%
 sq_errors(2,1) = sq_errors(1,2);
 colormap pink
