@@ -14,7 +14,7 @@ get_errors = false;
 if load_data == false
 
     number_of_averages = 100;
-    dataset = 'maize'; %options: 'cobo','pinhasi','all_wheat'
+    dataset = 'cobo'; %options: 'cobo','pinhasi','all_wheat'
     layers = {'av','prec'}; %full {'av' 'asym' 'csi','hydro' 'prec' 'tmean'}
     directory = 'generated_data/';
 
@@ -97,6 +97,7 @@ if level < 1
     save(filename, "ranges","level","active_layers", '-append');
 
 end
+
 %% import the data
 
 % add parent directory
@@ -131,6 +132,18 @@ if level < 2
     save(filename,"level","parameters", '-append');
 
 end
+
+%% add additional layers
+
+active_layers = [active_layers 1];
+parameters.active_layers = active_layers;
+ranges = [ranges; [-2 2]];
+temp_params = data_prep(1, [0 0 0 0 1 0 1], x, y, t);
+new_layer = temp_params.X{1}.*temp_params.X{2};
+
+% remove sea from prec layer
+parameters.X{1} = parameters.X{1}.*(1-temp_params.X{2});
+parameters.X{2} = new_layer;
 
 %% check speeds
     
@@ -189,11 +202,11 @@ end
 if level < 5
     tic
     % parameters = data_prep(number_of_averages, active_layers, x, y, t);
-    factors = [1e8];
+    factors = [1e7];
     all_params = {};
     for factor=factors
     
-        objective_function = @(theta) optimize_model(theta, parameters, 1e7);
+        objective_function = @(theta) optimize_model(theta, parameters, factor);
         theta_start = theta_start;
         
         % WITH GRADIENT

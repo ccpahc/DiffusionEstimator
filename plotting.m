@@ -47,10 +47,11 @@ for idx1 = 1:length(all_layers)
         metadata.dataset = "wheat";
         metadata.file = file;
         metadata.layers = layers;
+        load(file)
+        metadata.theta = theta_optim;
 
         database{length(database)+1} = metadata;
 
-        load(file)
         if ~any(strcmp({whos().name},'result'))
             result = run_model(parameters, theta_optim);
             save(file, "result", '-append');
@@ -112,10 +113,10 @@ for idx1 = 1:length(all_layers)
         metadata.dataset = "rice";
         metadata.file = file;
         metadata.layers = layers;
-
+        load(file)
+        metadata.theta = theta_optim;
         database{length(database)+1} = metadata;
 
-        load(file)
         if ~any(strcmp({whos().name},'result'))
             result = run_model(parameters, theta_optim);
             save(file, "result", '-append');
@@ -142,3 +143,4 @@ xtickangle(45);  % Rotate 45 degrees
 % Add colorbar and title
 colorbar;
 title("Rice")
+
