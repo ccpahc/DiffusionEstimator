@@ -1,4 +1,4 @@
-%% Colors
+ %% Colors
 
 % Define the three colors (RGB format):
 color1 = [4/255, 29/255, 45/255];   % Blue
@@ -502,11 +502,11 @@ title("Wheat", "FontSize",14,'Interpreter','latex')
 ylim([-1000,7000])
 set(gca,"TickLabelInterpreter",'latex')
 
-%%
+
 subplot(2,1,2)
 
 hold on
-load('C:\Users\matil\OneDrive\Documents\Work\AlanTuring_Oxford\bottlenecks\generated_data\cobo_av_100av_2025-03-24_10-59.mat')
+load('C:\Users\matil\OneDrive\Documents\Work\AlanTuring_Oxford\bottlenecks\generated_data\cobo_av_100av_2025-03-31_15-55.mat')
 [min_time, min_time_idx] = min(parameters.dataset_bp);
 dist = sqrt((parameters.dataset_lat-parameters.dataset_lat(min_time_idx)).^2 + (parameters.dataset_lon-parameters.dataset_lon(min_time_idx)).^2);
 dist_km = deg2km(dist);
@@ -527,11 +527,15 @@ s2 = line(A,B);
 s2.LineWidth = 2;
 s2.Color = custom_colors(2,:);
 
-second_dist = dist_km;
-second_dist(second_dist<4250) = nan;
-second_times = simulation_times;
-second_times(second_dist<4250) = nan;
-[min_time, min_time_idx] = min(second_dist);
+pt = scatter([A(1)],[B(1)]);
+pt.SizeData = 200;
+pt.LineWidth = 1.5;
+pt.MarkerEdgeColor = 'k';
+text(A(1) + 150,B(1) + 1000, "origin 1",'HorizontalAlignment', 'center', 'Interpreter','latex','FontSize', 8)
+
+second_dist = dist_km(dist_km>4000);
+second_times = simulation_times(dist_km>4000);
+[min_time, min_time_idx] = min(second_times);
 [max_time, max_time_idx] = max(second_dist);
 A2= [second_times(min_time_idx) second_times(max_time_idx)];
 B2=[second_dist(min_time_idx) second_dist(max_time_idx)];
@@ -539,6 +543,13 @@ s22 = line(A2,B2);
 s22.LineWidth = 2;
 s22.Color = custom_colors(2,:);
 
+pt = scatter([A2(1)],[B2(1)]);
+pt.SizeData = 200;
+pt.LineWidth = 1.5;
+pt.MarkerEdgeColor = 'k';
+text(A2(1)-200,B2(1) + 1000, "origin 2",'HorizontalAlignment', 'center', 'Interpreter','latex','FontSize', 8)
+
+ylim([-1000, 7000])
 
 load('C:\Users\matil\OneDrive\Documents\Work\AlanTuring_Oxford\bottlenecks\generated_data\cobo_av_prec_sea_100av_2025-03-28_14-04.mat')
 simulation_times = parameters.start_time - result.times/t_max*(parameters.start_time-parameters.end_time);
@@ -547,8 +558,8 @@ s3.MarkerFaceColor = custom_colors(3,:);
 s3.SizeData = size_pt;
 s3.MarkerFaceAlpha = 0.8;
 
-xlabel("Time (yr)",'Interpreter','latex')
-ylabel("Absolute distance (deg)",'Interpreter','latex')
+xlabel("Time (year)",'Interpreter','latex')
+ylabel("Absolute distance (km)",'Interpreter','latex')
 title("Rice", "FontSize",14,'Interpreter','latex')
 
 set(gca,"TickLabelInterpreter",'latex')
