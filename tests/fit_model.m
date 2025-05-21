@@ -7,8 +7,8 @@ tic
 t = datetime;
 t.Format = 'yyyy-MM-dd_HH-mm';
 % choose whether to load or start
-load_data = false;
-get_errors = false;
+load_data = true;
+get_errors = true;
 
 %%
 if load_data == false
@@ -35,6 +35,8 @@ end
 
 if load_data
     % filename
+
+    filename = "generated_data\all_wheat_av_100av_2025-03-24_11-09.mat";
     load(filename);
     
     load_data= true;
