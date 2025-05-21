@@ -4,7 +4,7 @@ load('generated_data\filename_database.mat')
 n_bootstraps = 100;
 for d=1:length(database)
     if (length(database{d}.layers) == 2)
-        if ~all(ismember('sea', database{d}.layers{2}))
+        if ~all(ismember('sea', database{d}.layers))
             continue
         end
     elseif length(database{d}.layers) == 1

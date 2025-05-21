@@ -300,10 +300,22 @@ if get_errors
         parameters = parameters.rmfield(parameters, random);
     end
     
-    for i = 1:n_bootstraps
+    parfor i = 1:n_bootstraps
         % 
-        parameters.random = 10+3*i-1;
-    
+
+        rng('shuffle');
+        n = size(complete_dataset, 1); % Number of points in the dataset
+        % Generate n random indices between 1 and n
+        random_indices = randi(n, n, 1);
+        % Use the indices to sample points from the dataset
+        sampled_dataset = complete_dataset(random_indices, :);
+        
+        x = sampled_dataset(:,1);
+        y = sampled_dataset(:,2);
+        t = sampled_dataset(:,3);
+
+        parameters =  data_prep(number_of_averages, active_layers, x, y, t);
+
         objective_function = @(theta) optimize_model(theta, parameters, factor);
     
         options = optimoptions('fminunc', ...

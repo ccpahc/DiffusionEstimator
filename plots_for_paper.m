@@ -272,13 +272,20 @@ sq_errors_r = [result.squared_error];
 yr_errors_r = [mean(spread_errors_boot)];
 yr_errorbar_r = [std(spread_errors_boot)];
 
+load('generated_data\maize_av_100av_2025-05-16_09-45.mat')
+result = run_model(parameters, theta_optim);
+labels_m = {};
+sq_errors_m = [result.squared_error];
+yr_errors_m = [mean(spread_errors_boot)];
+yr_errorbar_m = [std(spread_errors_boot)];
+
 for i=1:length(database)
     if (length(database{i}.layers) == 2)
-        if ~all(ismember('sea', database{i}.layers{2}))
+        if ~(ismember('sea', database{i}.layers))
             continue
         end
     elseif (length(database{i}.layers) == 1)
-        if database{i}.layers(1) ~= "sea"
+        if ~(ismember('sea', database{i}.layers))
             continue
         end
     end
@@ -297,30 +304,41 @@ for i=1:length(database)
         sq_errors_r = [sq_errors_r result.squared_error];
         yr_errors_r = [yr_errors_r mean(spread_errors_boot)];
         yr_errorbar_r = [yr_errorbar_r std(spread_errors_boot)];
+    elseif ismember('maize',database{i}.dataset)
+        disp(database{i}.layers)
+        labels_m{length(labels_m)+1} = database{i}.layers{1};
+        load(database{i}.file)
+        sq_errors_m = [sq_errors_m result.squared_error];
+        yr_errors_m = [yr_errors_m mean(spread_errors_boot)];
+        yr_errorbar_m = [yr_errorbar_m std(spread_errors_boot)];
     end
+
+    clear result
+    clear spread_errors_boot
 end
 
 
 [yr, w_idx] = sort(sq_errors_w);
 w_idx = fliplr(w_idx);
 
-yr_errors = [yr_errors_w(w_idx); yr_errors_r(w_idx)];
-sq_errors = [sq_errors_w(w_idx); sq_errors_r(w_idx)];
-yr_errorbar = [spread_errors_boot(w_idx); spread_errors_boot(w_idx)];
+yr_errors = [yr_errors_w(w_idx); yr_errors_r(w_idx); yr_errors_m(w_idx)];
+sq_errors = [sq_errors_w(w_idx); sq_errors_r(w_idx); sq_errors_m(w_idx)];
+yr_errorbar = [yr_errorbar_w(w_idx); yr_errorbar_r(w_idx); yr_errorbar_m_m(w_idx)];
 
 %%
 
 f = figure(1);
 f.Position = [100 100 400 300];
 hold on
-b2 = bar([0 1], yr_errors/1e3);
+b2 = bar([0 1 2], yr_errors/1e3);
 % set(gca,'XTickLabel', {"wheat", "rice"})
 
 x_errorbar = [-3 -2 -1 0 1 2 3].*0.115;
 e1 = errorbar(x_errorbar, yr_errors_w(w_idx)/1e3,yr_errorbar_w/1e3, "LineStyle","none", 'CapSize',10, 'Color', 'k', "LineWidth",1);
 e2 = errorbar(x_errorbar + 1, yr_errors_r(w_idx)/1e3,yr_errorbar_r/1e3, "LineStyle","none", 'CapSize',10, 'Color', 'k', "LineWidth",1);
-xticks([0 1])
-xticklabels({"wheat", "rice"})
+e3 = errorbar(x_errorbar + 2, yr_errors_m(w_idx)/1e3, yr_errorbar_m/1e3, "LineStyle","none", 'CapSize',10, 'Color', 'k', "LineWidth",1);
+xticks([0 1 2])
+xticklabels({"wheat", "rice", "maize"})
 cmap = pepper(1:end-60,:);
 % ylim([0, 3.2])
 
@@ -349,8 +367,8 @@ saveas(gcf,"saved_plots/results_bar_chart.pdf")
 %% horizontal bar chart
 f = figure(1);
 f.Position = [100 100 800 180];
-tiledlayout(1,2, 'Padding', 'none', 'TileSpacing', 'compact'); 
-for p = 1:2
+tiledlayout(1,3, 'Padding', 'none', 'TileSpacing', 'compact'); 
+for p = 1:3
     nexttile    
     hold on
     b2 = barh([0], fliplr(yr_errors(p,:))/1e3);
@@ -363,6 +381,9 @@ for p = 1:2
     elseif p == 2
         title("Rice",'Interpreter','latex')
         e2 = errorbar(yr_errors_r(fliplr(w_idx))/1e3, x_errorbar,yr_errorbar_r(fliplr(w_idx))/1e3, 'horizontal', "LineStyle","none", 'CapSize',8, 'Color', 'k', "LineWidth",1);
+    elseif p == 3
+        title("Maize",'Interpreter','latex')
+        e2 = errorbar(yr_errors_m(fliplr(w_idx))/1e3, x_errorbar,yr_errorbar_m(fliplr(w_idx))/1e3, 'horizontal', "LineStyle","none", 'CapSize',8, 'Color', 'k', "LineWidth",1);
     end
     
     % Gradient coloring
@@ -409,7 +430,7 @@ function [x,y,c] = get_plot_coords(parameters, result)
 end
 f = figure();
 f.Position = [100 100 800 300];
-tiledlayout(2,2, 'Padding', 'none', 'TileSpacing', 'compact'); 
+tiledlayout(2,3, 'Padding', 'none', 'TileSpacing', 'compact'); 
 
 nexttile
 load('generated_data\all_wheat_av_100av_2025-03-24_11-09.mat')
@@ -445,6 +466,25 @@ title("Rice - baseline",'Interpreter','latex', 'FontSize',10)
 set(gca,"TickLabelInterpreter",'latex')
 grid on
 yticks([-5,-2.5,0,2.5,5])
+
+
+nexttile
+load('generated_data\maize_av_100av_2025-05-16_09-45.mat')
+[x,y,colors] = get_plot_coords(parameters, result);
+hold on;
+for i = 1:length(x)
+    line([x(i), x(i)], [0, y(i)/1e3], 'Color', colors(i, :), 'LineWidth', 0.5);
+end
+% Plot the points with color corresponding to y-values
+s = scatter(x, y/1e3, 5, colors, 'filled'); % 100 is the marker size, adjust as needed
+ylim([-5,5])
+xlabel("Year",'Interpreter','latex', 'FontSize',8)
+ylabel("Error (kyears)",'Interpreter','latex', 'FontSize',8)
+title("Maize - baseline",'Interpreter','latex', 'FontSize',10)
+set(gca,"TickLabelInterpreter",'latex')
+grid on
+yticks([-5,-2.5,0,2.5,5])
+
 nexttile
 load('generated_data\all_wheat_av_prec_sea_100av_2025-03-28_14-02.mat')
 [x,y,colors] = get_plot_coords(parameters, result);
@@ -477,9 +517,26 @@ ylim([-5,5])
 xlabel("Year",'Interpreter','latex', 'FontSize',8)
 ylabel("Error (kyears)",'Interpreter','latex', 'FontSize',8)
 title("Rice - sea and precipitation",'Interpreter','latex', 'FontSize',10)
-
 set(gca,"TickLabelInterpreter",'latex')
 set(gcf, 'Color', 'White', 'Alphamap',0)
+grid on
+yticks([-5,-2.5,0,2.5,5])
+
+
+nexttile
+load('generated_data\maize_av_sea_csi_100av_2025-05-16_11-12.mat')
+[x,y,colors] = get_plot_coords(parameters, result);
+hold on;
+for i = 1:length(x)
+    line([x(i), x(i)], [0, y(i)/1e3], 'Color', colors(i, :), 'LineWidth', 0.5);
+end
+% Plot the points with color corresponding to y-values
+s = scatter(x, y/1e3, 5, colors, 'filled'); % 100 is the marker size, adjust as needed
+ylim([-5,5])
+xlabel("Year",'Interpreter','latex', 'FontSize',8)
+ylabel("Error (kyears)",'Interpreter','latex', 'FontSize',8)
+title("Maize - sea and crop suitability",'Interpreter','latex', 'FontSize',10)
+set(gca,"TickLabelInterpreter",'latex')
 grid on
 yticks([-5,-2.5,0,2.5,5])
 
@@ -489,7 +546,7 @@ saveas(gcf,"saved_plots/results_error_plots.pdf")
 addpath("src")
 f = figure();
 f.Position = [100 100 800 200];
-tiledlayout(1,2, 'Padding', 'none', 'TileSpacing', 'compact'); 
+tiledlayout(1,3, 'Padding', 'none', 'TileSpacing', 'compact'); 
 
 nexttile
 load('generated_data\all_wheat_av_prec_sea_100av_2025-03-28_14-02.mat')
@@ -505,8 +562,17 @@ simulation = parameters.end_time - mean(result.A, 3)*(parameters.end_time-parame
 [~, ~, t_max] = size(result.A);
 plot_map(parameters, parameters.dataset_bp, false, simulation);
 colormap(pepper)
-
 title("Rice - sea and precipitation",'Interpreter','latex', 'FontSize',10)
+
+nexttile
+load('generated_data\maize_av_sea_csi_100av_2025-05-16_11-12.mat');
+simulation = parameters.end_time - mean(result.A, 3)*(parameters.end_time-parameters.start_time);
+[~, ~, t_max] = size(result.A);
+plot_map(parameters, parameters.dataset_bp, false, simulation);
+colormap(pepper)
+title("Maize - sea and crop suitability",'Interpreter','latex', 'FontSize',10)
+
+
 set(gcf, 'Color', 'White', 'Alphamap',0)
 
 saveas(gcf,"saved_plots/maps_and_errors.pdf")
@@ -518,7 +584,9 @@ custom_colors = [0 0 0;
                 0.5 0.5 0.5;  
                 0.6 0 0];
 size_pt = 7;
-subplot(2,1,1)
+
+% WHEAT
+subplot(3,1,1)
 hold on
 load('generated_data\all_wheat_av_100av_2025-03-24_11-09.mat')
 [min_time, min_time_idx] = min(parameters.dataset_bp);
@@ -553,7 +621,7 @@ pt = scatter([A(1)],[B(1)]);
 pt.SizeData = 200;
 pt.LineWidth = 1.5;
 pt.MarkerEdgeColor = 'k';
-text(A(1),B(1)+1000, "origin",'HorizontalAlignment', 'center', 'Interpreter','latex','FontSize', 8)
+text(A(1),B(1)+2000, "origin",'HorizontalAlignment', 'center', 'Interpreter','latex','FontSize', 8)
 
 legend(["Original dataset",  "Average simulation", "Full simulation"], "Location", "northwest",'Interpreter','latex')
 xlabel("Time (yr)",'Interpreter','latex')
@@ -563,8 +631,9 @@ title("Wheat", "FontSize",14,'Interpreter','latex')
 ylim([-1000,7000])
 set(gca,"TickLabelInterpreter",'latex')
 
+% RICE
 
-subplot(2,1,2)
+subplot(3,1,2)
 
 hold on
 load('generated_data\cobo_av_100av_2025-03-31_15-55.mat')
@@ -592,7 +661,7 @@ pt = scatter([A(1)],[B(1)]);
 pt.SizeData = 200;
 pt.LineWidth = 1.5;
 pt.MarkerEdgeColor = 'k';
-text(A(1) + 150,B(1) + 1000, "origin 1",'HorizontalAlignment', 'center', 'Interpreter','latex','FontSize', 8)
+text(A(1) + 150,B(1) + 2000, "origin 1",'HorizontalAlignment', 'center', 'Interpreter','latex','FontSize', 8)
 
 second_dist = dist_km(dist_km>4000);
 second_times = simulation_times(dist_km>4000);
@@ -608,9 +677,11 @@ pt = scatter([A2(1)],[B2(1)]);
 pt.SizeData = 200;
 pt.LineWidth = 1.5;
 pt.MarkerEdgeColor = 'k';
-text(A2(1)-200,B2(1) + 1000, "origin 2",'HorizontalAlignment', 'center', 'Interpreter','latex','FontSize', 8)
+text(A2(1)-200,B2(1) + 2000, "origin 2",'HorizontalAlignment', 'center', 'Interpreter','latex','FontSize', 8)
 
 ylim([-1000, 7000])
+xlim([-5000, 2000])
+
 
 load('generated_data\cobo_av_prec_sea_100av_2025-03-28_14-04.mat')
 simulation_times = parameters.start_time - result.times/t_max*(parameters.start_time-parameters.end_time);
@@ -623,6 +694,51 @@ xlabel("Time (year)",'Interpreter','latex')
 ylabel("Absolute distance (km)",'Interpreter','latex')
 title("Rice", "FontSize",14,'Interpreter','latex')
 
+% MAIZE
+subplot(3,1,3)
+hold on
+load('generated_data\maize_av_100av_2025-05-16_09-45.mat')
+[min_time, min_time_idx] = min(parameters.dataset_bp);
+
+
+dist = sqrt((parameters.dataset_lat-parameters.dataset_lat(min_time_idx)).^2 + (parameters.dataset_lon-parameters.dataset_lon(min_time_idx)).^2);
+dist_km = deg2km(dist);
+
+[max_time, max_time_idx] = max(dist_km);
+[~, ~, t_max] = size(result.A);
+
+s1 = scatter(parameters.dataset_bp, dist_km, "filled");
+s1.SizeData = size_pt;
+s1.MarkerFaceColor = custom_colors(1,:);
+s1.MarkerFaceAlpha = 0.8;
+
+simulation_times = parameters.start_time - result.times/t_max*(parameters.start_time-parameters.end_time);
+A= [simulation_times(min_time_idx) simulation_times(max_time_idx)];
+B=[dist_km(min_time_idx) dist_km(max_time_idx)];
+s2 = line(A,B);
+s2.LineWidth = 2;
+s2.Color = custom_colors(2,:);
+
+load('generated_data\maize_av_sea_csi_100av_2025-05-16_11-12.mat')
+simulation_times = parameters.start_time - result.times/t_max*(parameters.start_time-parameters.end_time);
+s3 = scatter(simulation_times, dist_km, 'filled');
+s3.MarkerFaceColor = custom_colors(3,:);
+s3.SizeData = size_pt;
+s3.MarkerFaceAlpha = 0.8;
+
+pt = scatter([A(1)],[B(1)]);
+pt.SizeData = 200;
+pt.LineWidth = 1.5;
+pt.MarkerEdgeColor = 'k';
+text(A(1),B(1)+2000, "origin",'HorizontalAlignment', 'center', 'Interpreter','latex','FontSize', 8)
+
+xlabel("Time (yr)",'Interpreter','latex')
+ylabel("Absolute distance (deg)",'Interpreter','latex')
+title("Maize", "FontSize",14,'Interpreter','latex')
+
+ylim([-1000,7000])
+set(gca,"TickLabelInterpreter",'latex')
+
 set(gca,"TickLabelInterpreter",'latex')
 set(gcf, 'Color', 'White', 'Alphamap',0)
 
@@ -630,67 +746,6 @@ saveas(gcf,"saved_plots/dist_vs_time.pdf")
 
 %% Table
 
-% Define your data (example data - replace with your actual values)
-load('generated_data\filename_database.mat')
-
-% Initialize LaTeX table
-latex_table = sprintf('\\begin{table}[ht]\n');
-latex_table = [latex_table sprintf('\\centering\n')];
-latex_table = [latex_table sprintf('\\caption{Performance Comparison}\n')];
-latex_table = [latex_table sprintf('\\label{tab:results}\n')];
-latex_table = [latex_table sprintf('\\begin{tabular}{|c|c|c|c|c|}\n')];
-latex_table = [latex_table sprintf('\\hline\n')];
-latex_table = [latex_table sprintf('Dataset & Layers & $\\theta$ valuesm  & Average error (years) & Diff. probability \\\\ \n')];
-latex_table = [latex_table sprintf('\\hline\n')];
-
-for d=1:length(database)
-    if (length(database{d}.layers) == 2)
-        if ~all(ismember('sea', database{d}.layers{2}))
-            continue
-        end
-    elseif length(database{d}.layers) == 1
-        if ~all(ismember(database{d}.layers{1}, {'sea','av'}))
-            continue
-        end
-
-    end
-    if strcmp(database{d}.layers{1},'av')
-        layers_str = database{d}.layers{1};
-        thetas_str = sprintf('%.2f',database{d}.theta);
-        av_theta = database{d}.theta;
-    else
-        % Format layers and thetas as comma-separated lists
-        layers_str = strjoin(database{d}.layers, ', ');
-        thetas_str = strjoin(cellfun(@(x) sprintf('%.2f', x), num2cell(database{d}.theta), 'UniformOutput', false), ', ');
-    end
-
-    load(database{d}.file)
-    if length(theta_optim) > 1
-        prob_diff = 1/(1+exp(theta_optim(1)+theta_optim(2))) - 1/(1+exp(theta_optim(1)));
-    else
-        prob_diff = 1;
-    end
-    
-    % Add row to table
-    latex_table = [latex_table sprintf('%s & %s & %s & %.2f & %.2f \\\\ \n', ...
-        database{d}.dataset, layers_str, thetas_str, sqrt(result.squared_error), prob_diff)];
-    latex_table = [latex_table sprintf('\\hline\n')];
-end
-
-% Close table environment
-latex_table = [latex_table sprintf('\\end{tabular}\n')];
-latex_table = [latex_table sprintf('\\end{table}\n')];
-
-% Display the LaTeX code
-disp(latex_table);
-
-% Optionally write to file
-fid = fopen('results_table.tex', 'w');
-fprintf(fid, '%s', latex_table);
-fclose(fid);
-disp('LaTeX table saved to results_table.tex');
-
-%%
 load('generated_data\filename_database.mat')
 
 % Initialize LaTeX table
@@ -715,14 +770,21 @@ rice_table = [rice_table sprintf('\\toprule\n')];
 rice_table = [rice_table sprintf('Layers & $\\theta$ values & Avg error & Prob. diff. & Velocity diff. \\\\ \n')]; % New header
 rice_table = [rice_table sprintf('\\midrule\n')];
 
+% Process maize data
+maize_table = sprintf('\\textbf{Maize Dataset}\\\\\n');
+maize_table = [maize_table sprintf('\\begin{tabular}{cccccc}\n')]; % Added column
+maize_table = [maize_table sprintf('\\toprule\n')];
+maize_table = [maize_table sprintf('Layers & $\\theta$ values & Avg error & Prob. diff. & Velocity diff. \\\\ \n')]; % New header
+maize_table = [maize_table sprintf('\\midrule\n')];
+
 for d = 1:length(database)
     % Skip entries that don't match criteria
     if (length(database{d}.layers) == 2)
-        if ~all(ismember('sea', database{d}.layers{2}))
+        if ~(ismember('sea', database{d}.layers))
             continue
         end
     elseif length(database{d}.layers) == 1
-        if ~all(ismember(database{d}.layers{1}, {'sea','av'}))
+        if ~(ismember({'sea'}, database{d}.layers)) && ~(ismember({'av'}, database{d}.layers))
             continue
         end
     end
@@ -749,10 +811,13 @@ for d = 1:length(database)
     
     % Add to appropriate subtable
     if contains(database{d}.dataset, 'wheat', 'IgnoreCase', true)
-        wheat_table = [wheat_table sprintf('%s & %s & %.2f & %.2f & %.2f \\\\ \n', ...
+        wheat_table = [wheat_table sprintf('%s & %s & %.0f & %.2f & %.2f \\\\ \n', ...
             layers_str, thetas_str, sqrt(result.squared_error), prob_diff, velocity_diff)];
     elseif contains(database{d}.dataset, 'rice', 'IgnoreCase', true)
-        rice_table = [rice_table sprintf('%s & %s & %.2f & %.2f & %.2f \\\\ \n', ...
+        rice_table = [rice_table sprintf('%s & %s & %.0f & %.2f & %.2f \\\\ \n', ...
+            layers_str, thetas_str, sqrt(result.squared_error), prob_diff, velocity_diff)];
+    elseif contains(database{d}.dataset, 'maize', 'IgnoreCase', true)
+        maize_table = [maize_table sprintf('%s & %s & %.0f & %.2f & %.2f \\\\ \n', ...
             layers_str, thetas_str, sqrt(result.squared_error), prob_diff, velocity_diff)];
     end
 end
@@ -762,11 +827,15 @@ wheat_table = [wheat_table sprintf('\\bottomrule\n')];
 wheat_table = [wheat_table sprintf('\\end{tabular}\n')];
 rice_table = [rice_table sprintf('\\bottomrule\n')];
 rice_table = [rice_table sprintf('\\end{tabular}\n')];
+maize_table = [maize_table sprintf('\\bottomrule\n')];
+maize_table = [maize_table sprintf('\\end{tabular}\n')];
 
 % Combine tables with spacing
 latex_table = [latex_table wheat_table];
 latex_table = [latex_table sprintf('\\\\[2ex]\n')]; % Vertical space between tables
 latex_table = [latex_table rice_table];
+latex_table = [latex_table sprintf('\\\\[2ex]\n')]; % Vertical space between tables
+latex_table = [latex_table maize_table];
 latex_table = [latex_table sprintf('\\bottomrule\n')];
 latex_table = [latex_table sprintf('\\end{tabular}\n')];
 latex_table = [latex_table sprintf('\\end{table}\n')];
