@@ -294,7 +294,7 @@ if get_errors
     
     all_theta = zeros(n_bootstraps,length(theta_start));
     all_errors = zeros(n_bootstraps, 1);
-    factor = 1;
+    factor = 1e5;
     [x,y,t] = get_dataset(dataset);
     parameters =  data_prep(number_of_averages, active_layers, x, y, t);
     complete_dataset = parameters.dataset_idx;
@@ -303,26 +303,33 @@ if get_errors
     if isfield(parameters,'random')
         parameters = parameters.rmfield(parameters, random);
     end
-    
-    for i = 1:n_bootstraps
-        % 
 
-        rng('shuffle');
+    datasets = zeros([n_bootstraps size(complete_dataset)]);
+
+
+    seeds = randi(2^32,n_bootstraps,1);
+
+    parfor i = 1:n_bootstraps
+        rng(seeds(i));
+        % 
+        [x,y,t] = get_dataset(dataset);
+        parameters =  data_prep(number_of_averages, active_layers, x, y, t);
+        complete_dataset = parameters.dataset_idx;
         n = size(complete_dataset, 1); % Number of points in the dataset
         % Generate n random indices between 1 and n
         random_indices = randi(n, n, 1);
+
         % Use the indices to sample points from the dataset
         sampled_dataset = complete_dataset(random_indices, :);
+        datasets(i,:,:) = sampled_dataset;
         
         x = sampled_dataset(:,1);
         y = sampled_dataset(:,2);
         t = sampled_dataset(:,3);
 
         parameters.dataset_idx = sampled_dataset;
-        factor = 1e2;
-
+        factor = 1e4;
         objective_function = @(theta) optimize_model(theta, parameters, factor);
-    
         % WITH GRADIENT
         options = optimoptions('fminunc', ...
             'Display', 'iter', ...
@@ -337,15 +344,11 @@ if get_errors
             'MaxIterations', 10000, ...
             'OutputFcn', @saveIterations, ... % Call the custom function
             "UseParallel", false);
-        
+
         [theta, fval, exitflag, output, grad, hessian] = fminunc(objective_function, theta_start, options);
-    
-        result = run_model(parameters,theta);
-        disp(result.squared_error)
-        disp("New minimum found")
-        disp(theta);
+
         all_theta(i,:) = theta;
-        all_errors(i) = result.squared_error;
+        all_errors(i) = fval;
+        disp(result.squared_error)
     end
-    save(filename, "all_theta", "all_errors", '-append')
 end

@@ -108,7 +108,7 @@ function parameters = data_prep(n_averages, active_layers, lats, lons, years)
     % add second start point
    
     % set a seed and define matrix of random numbers
-    rng(12)
+
     % parameters.U = rand([size(parameters.A) n_averages]);
     parameters.n = n_averages;
     W = W(latidx,lonidx);
