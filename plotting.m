@@ -22,7 +22,7 @@ metadata.theta = theta_optim;
 database{length(database)+1} = metadata;
 
 
-all_layers = {'asym' 'csi' 'hydro' 'prec' 'tmean','sea'};
+all_layers = {'asym' 'crop' 'hydro' 'prec' 'tmean','sea'};
 sq_errs = zeros(length(all_layers));
 
 
@@ -98,7 +98,7 @@ metadata.theta = theta_optim;
 
 database{length(database)+1} = metadata;
 av_sq_err = result.squared_error;
-all_layers = {'asym' 'csi' 'hydro' 'prec' 'tmean','sea'};
+all_layers = {'asym' 'crop' 'hydro' 'prec' 'tmean','sea'};
 sq_errs = zeros(length(all_layers));
 
 for idx1 = 1:length(all_layers)
@@ -172,7 +172,7 @@ metadata.theta = theta_optim;
 
 database{length(database)+1} = metadata;
 av_sq_err = result.squared_error;
-all_layers = {'asym' 'csi' 'hydro' 'prec' 'tmean','sea'};
+all_layers = {'asym' 'crop' 'hydro' 'prec' 'tmean','sea'};
 sq_errs = zeros(length(all_layers));
 
 for idx1 = 1:length(all_layers)
