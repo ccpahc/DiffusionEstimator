@@ -1,4 +1,4 @@
-function [error, grad, hessian] = optimize_model(theta, parameters, data, factor)
+function [error, grad, hessian] = optimize_model_bootstraps(theta, parameters, data, factor)
     result = run_model(parameters, theta, data);
     error = result.squared_error;
     if nargout > 1
