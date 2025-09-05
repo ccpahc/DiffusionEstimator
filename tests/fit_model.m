@@ -8,14 +8,14 @@ t = datetime;
 t.Format = 'yyyy-MM-dd_HH-mm';
 % choose whether to load or start
 load_data = false;
-get_errors = false;
+get_errors = true;
 
 %%
 if load_data == false
 
     number_of_averages = 50;
-    dataset = 'cobo'; %options: 'cobo','pinhasi','all_wheat','maize'
-    layers = {'av','sea'}; %full {'av' 'asym' 'csi','hydro' 'prec' 'tmean','sea','crop'}
+    dataset = 'all_wheat'; %options: 'cobo','pinhasi','all_wheat','maize'
+    layers = {'av', 'asym', 'csi','hydro','sea','crop'}; %full {'av' 'asym' 'csi','hydro' 'prec' 'tmean','sea','crop'}
     directory = 'generated_data/';
 
     %create filename
@@ -325,12 +325,12 @@ if get_errors
     complete_dataset = parameters.dataset_idx;
     n = size(complete_dataset,1);
 
-    parfor i = 1:n_bootstraps
+    for i = 1:n_bootstraps
         rng(seeds(i));
         random_indices = randi(n,n,1);
         sampled_dataset = complete_dataset(random_indices,:);
 
-        factor = 1e4;
+        factor = 1e5;
         objective_function = @(theta) optimize_model_bootstraps(theta, parameters, sampled_dataset, factor);
         % WITH GRADIENT
         options = optimoptions('fminunc', ...
@@ -339,7 +339,7 @@ if get_errors
             'HessianFcn','objective', ...
             'SpecifyObjectiveGradient',true, ...
             'StepTolerance', 5e-3, ...,
-            "FiniteDifferenceStepSize", 0.01, ...,
+            "FiniteDifferenceStepSize", 0.001, ...,
             "FunctionTolerance",0.00001, ...
             "OptimalityTolerance",2e-6, ...
             'MaxFunctionEvaluations', 10000, ...

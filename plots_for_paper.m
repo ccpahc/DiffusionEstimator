@@ -47,7 +47,7 @@ redblue = interp1([1, 128, 256], [color1; color2; color3], linspace(1, 256, numC
 %% Diffusion plot
 addpath('src');
 addpath("cmaps")
-[x,y,t] = get_dataset("cobo");
+[x,y,t] = get_dataset("all_wheat");
 
 parameters = data_prep(1, [1 0 1 0 0 0 0 0], x, y, t);
 result = run_model(parameters, [-1.87, 0.90]);
@@ -109,7 +109,7 @@ axis xy
 cb = colorbar;
 cb.FontSize = 8;
 set(cb,'TickLabelInterpreter','latex','FontSize',6)
-ylabel(cb,'Year of arrival, $Y_\ell$','FontSize',8,'Interpreter','latex');
+ylabel(cb,'Year of arrival, $Y_\ell$','FontSize',8,'Interpreter','latex', 'Rotation',-90);
 %make sea white
 
 geoshow(fliplr([land.Lat]),fliplr([land.Lon]),'DisplayType', ...
@@ -117,7 +117,9 @@ geoshow(fliplr([land.Lat]),fliplr([land.Lon]),'DisplayType', ...
 framem('FLineWidth', 1, 'FontSize', 4)
 scatterm(parameters.dataset_lat, parameters.dataset_lon, 3, parameters.times(parameters.dataset_idx(:,3)), 'filled');
 
-saveas(gcf, 'saved_plots/Diffusive_data.pdf')
+% saveas(gcf, 'saved_plots/Diffusive_data.pdf')
+exportgraphics(gcf,'saved_plots/Diffusive_data.pdf','ContentType','vector')
+
 
 %% simulation plot
 f = figure (1);
@@ -171,7 +173,7 @@ axis xy
 cb = colorbar;
 cb.FontSize = 8;
 set(cb,'TickLabelInterpreter','latex','FontSize',6)
-ylabel(cb,'Year of arrival, $\hat{Y}_\ell$','FontSize',8,'Interpreter','latex');
+ylabel(cb,'Simulated year of arrival, $\hat{Y}_\ell$','FontSize',8,'Interpreter','latex', 'Rotation',-90);
 %make sea white
 
 geoshow(fliplr([land.Lat]),fliplr([land.Lon]),'DisplayType', ...
@@ -180,7 +182,9 @@ framem('FLineWidth', 1, 'FontSize', 4)
 
 
 
-saveas(gcf, 'saved_plots/Simulated_data.pdf', 'pdf')
+% saveas(gcf, 'saved_plots/Simulated_data.pdf', 'pdf')
+exportgraphics(gcf,'saved_plots/Simulated_data.pdf','ContentType','vector')
+
 clear parameters
 clear result
 
@@ -190,8 +194,10 @@ addpath('src');
 addpath("generated_data\")
 %%
 [x,y,t] = get_dataset("all_wheat");
-active_layers = [0 0 0 0 1 0 0 0]; %prec
-parameters = data_prep(1, active_layers, x, y, t);
+% active_layers = [0 0 0 0 1 0 0 0]; %prec
+% parameters = data_prep(1, active_layers, x, y, t);
+load('generated_data\all_wheat_av_prec_100av_2025-04-08_06-09.mat')
+
 %%
 [nx,ny] = size(parameters.X{1});
 X = linspace(parameters.lat(1), parameters.lat(2), nx);
@@ -216,6 +222,7 @@ zlabel("Precipitation", "FontSize",16)
 grid off
 set(gca,"TickLabelInterpreter",'latex')
 saveas(gcf,"saved_plots/prec_layer.pdf")
+% exportgraphics(gcf,'saved_plots/tmean_layer.pdf','ContentType','vector')
 
 %% %% Plot objective function
 load("model_plot_sweep_small.mat")
@@ -250,8 +257,8 @@ xlabel("\theta_{prec}", 'Rotation', 55, "FontSize",16)
 ylabel("\theta_{tmean}", 'Rotation', -5, "FontSize",16)
 zlabel("Objective function (a.u.)", "FontSize",16)
 
-saveas(gcf,"saved_plots/Obj_func.pdf")
-
+% saveas(gcf,"saved_plots/Obj_func.pdf")
+exportgraphics(gcf,'saved_plots/Obj_func.pdf','ContentType','vector')
 %% Bar chart results plot
 addpath("src")
 
@@ -412,7 +419,8 @@ end
 
 set(gcf, 'Color', 'White', 'Alphamap',0)
 
-saveas(gcf,"saved_plots/results_horizontal_bar_chart.pdf")
+% saveas(gcf,"saved_plots/results_horizontal_bar_chart.pdf")
+exportgraphics(gcf,'saved_plots/results_horizontal_bar_chart.pdf','ContentType','vector')
 %%
 function [x,y,c] = get_plot_coords(parameters, result)
     % Define the three colors (RGB format):
@@ -425,7 +433,7 @@ function [x,y,c] = get_plot_coords(parameters, result)
     
     % Create a colormap by interpolating between these colors:
     cmap = interp1([1, 128, 256], [color1; color2; color3], linspace(1, 256, numColors));
-    x = parameters.dataset_idx(:,3)*parameters.dt+parameters.start_time;
+    x = parameters.dataset_bp;%parameters.dataset_idx(:,3)*parameters.dt+parameters.start_time;
     y = result.errors;
     [x, x_ind] = sort(x);
     y = y(x_ind);
@@ -440,7 +448,7 @@ f.Position = [100 100 800 300];
 tiledlayout(2,3, 'Padding', 'none', 'TileSpacing', 'compact'); 
 
 nexttile
-load('generated_data\all_wheat_av_100av_2025-03-24_11-09.mat')
+load('generated_data\all_wheat_av_100av_2025-06-14_02-27.mat')
 [x,y,colors] = get_plot_coords(parameters, result);
 hold on;
 for i = 1:length(x)
@@ -449,15 +457,16 @@ end
 % Plot the points with color corresponding to y-values
 s = scatter(x, y/1e3, 5, colors, 'filled'); % 100 is the marker size, adjust as needed
 ylim([-5,5])
-xlabel("Year",'Interpreter','latex', 'FontSize',8)
+% xlabel("Year",'Interpreter','latex', 'FontSize',8)
 ylabel("Error (kyears)",'Interpreter','latex', 'FontSize',8)
 title("Wheat - baseline",'Interpreter','latex', 'FontSize',10)
 set(gca,"TickLabelInterpreter",'latex')
 grid on
 yticks([-5,-2.5,0,2.5,5])
+xticklabels([])
 
 nexttile
-load('generated_data\cobo_av_100av_2025-03-31_15-55.mat')
+load('generated_data\cobo_av_100av_2025-07-10_15-10.mat')
 [x,y,colors] = get_plot_coords(parameters, result);
 hold on;
 for i = 1:length(x)
@@ -467,16 +476,19 @@ end
 % Plot the points with color corresponding to y-values
 s = scatter(x, y/1e3, 5, colors, 'filled'); % 100 is the marker size, adjust as needed
 ylim([-5,5])
-xlabel("Year",'Interpreter','latex', 'FontSize',8)
-ylabel("Error (kyears)",'Interpreter','latex', 'FontSize',8)
+% xlabel("Year",'Interpreter','latex', 'FontSize',8)
+% ylabel("Error (kyears)",'Interpreter','latex', 'FontSize',8)
 title("Rice - baseline",'Interpreter','latex', 'FontSize',10)
 set(gca,"TickLabelInterpreter",'latex')
 grid on
 yticks([-5,-2.5,0,2.5,5])
+yticklabels([])
+xticklabels([])
+% suptitle('\textbf{b.} Baseline model','Interpreter','latex','FontSize',10)
 
 
 nexttile
-load('generated_data\maize_av_100av_2025-05-16_09-45.mat')
+load('generated_data\maize_av_100av_2025-06-16_09-06.mat')
 [x,y,colors] = get_plot_coords(parameters, result);
 hold on;
 for i = 1:length(x)
@@ -485,15 +497,17 @@ end
 % Plot the points with color corresponding to y-values
 s = scatter(x, y/1e3, 5, colors, 'filled'); % 100 is the marker size, adjust as needed
 ylim([-5,5])
-xlabel("Year",'Interpreter','latex', 'FontSize',8)
-ylabel("Error (kyears)",'Interpreter','latex', 'FontSize',8)
+% xlabel("Year",'Interpreter','latex', 'FontSize',8)
+% ylabel("Error (kyears)",'Interpreter','latex', 'FontSize',8)
 title("Maize - baseline",'Interpreter','latex', 'FontSize',10)
 set(gca,"TickLabelInterpreter",'latex')
 grid on
 yticks([-5,-2.5,0,2.5,5])
+yticklabels([])
+xticklabels([])
 
 nexttile
-load('generated_data\all_wheat_av_prec_sea_100av_2025-03-28_14-02.mat')
+load('generated_data\all_wheat_av_prec_sea_100av_2025-06-08_07-44.mat')
 [x,y,colors] = get_plot_coords(parameters, result);
 hold on;
 for i = 1:length(x)
@@ -511,7 +525,7 @@ grid on
 yticks([-5,-2.5,0,2.5,5])
 
 nexttile
-load('generated_data\cobo_av_prec_sea_100av_2025-03-28_14-04.mat')
+load('generated_data\cobo_av_prec_sea_100av_2025-06-16_06-15.mat')
 [x,y,colors] = get_plot_coords(parameters, result);
 hold on;
 for i = 1:length(x)
@@ -522,16 +536,17 @@ end
 s = scatter(x, y/1e3, 5, colors, 'filled'); % 100 is the marker size, adjust as needed
 ylim([-5,5])
 xlabel("Year",'Interpreter','latex', 'FontSize',8)
-ylabel("Error (kyears)",'Interpreter','latex', 'FontSize',8)
+% ylabel("Error (kyears)",'Interpreter','latex', 'FontSize',8)
 title("Rice - sea and precipitation",'Interpreter','latex', 'FontSize',10)
 set(gca,"TickLabelInterpreter",'latex')
 set(gcf, 'Color', 'White', 'Alphamap',0)
 grid on
 yticks([-5,-2.5,0,2.5,5])
-
+yticklabels([])
+% suptitle('\textbf{c.} Best fitting model','Interpreter','latex','FontSize',10)
 
 nexttile
-load('generated_data\maize_av_sea_csi_100av_2025-05-16_11-12.mat')
+load('generated_data\maize_av_prec_sea_100av_2025-06-18_05-15.mat')
 [x,y,colors] = get_plot_coords(parameters, result);
 hold on;
 for i = 1:length(x)
@@ -541,14 +556,15 @@ end
 s = scatter(x, y/1e3, 5, colors, 'filled'); % 100 is the marker size, adjust as needed
 ylim([-5,5])
 xlabel("Year",'Interpreter','latex', 'FontSize',8)
-ylabel("Error (kyears)",'Interpreter','latex', 'FontSize',8)
+% ylabel("Error (kyears)",'Interpreter','latex', 'FontSize',8)
 title("Maize - sea and crop suitability",'Interpreter','latex', 'FontSize',10)
 set(gca,"TickLabelInterpreter",'latex')
 grid on
 yticks([-5,-2.5,0,2.5,5])
+yticklabels([])
 
-saveas(gcf,"saved_plots/results_error_plots.pdf")
-
+% saveas(gcf,"saved_plots/results_error_plots.pdf")
+exportgraphics(gcf,'saved_plots/results_error_plots.pdf','ContentType','vector')
 %% map plot
 addpath("src")
 f = figure();
@@ -556,46 +572,96 @@ f.Position = [100 100 800 200];
 tiledlayout(1,3, 'Padding', 'none', 'TileSpacing', 'compact'); 
 
 nexttile
-load('generated_data\all_wheat_av_prec_sea_100av_2025-03-28_14-02.mat')
-simulation = parameters.end_time - mean(result.A, 3)*(parameters.end_time-parameters.start_time);
+load('generated_data\all_wheat_av_prec_sea_100av_2025-06-08_07-44.mat')
+simulation = (parameters.end_time - mean(result.A, 3)*(parameters.end_time-parameters.start_time))/1000;
 [~, ~, t_max] = size(result.A);
-plot_map(parameters, parameters.dataset_bp, false, simulation);
+plot_map_flat(parameters, parameters.dataset_bp/1000, false, simulation);
 colormap(pepper)
 title("Wheat - sea and precipitation",'Interpreter','latex')
 
 nexttile
-load('generated_data\cobo_av_prec_sea_100av_2025-03-28_14-04.mat')
-simulation = parameters.end_time - mean(result.A, 3)*(parameters.end_time-parameters.start_time);
+load('generated_data\cobo_av_prec_sea_100av_2025-06-16_06-15.mat')
+simulation = (parameters.end_time - mean(result.A, 3)*(parameters.end_time-parameters.start_time))/1000;
 [~, ~, t_max] = size(result.A);
-plot_map(parameters, parameters.dataset_bp, false, simulation);
+plot_map_flat(parameters, parameters.dataset_bp/1000, false, simulation);
 colormap(pepper)
 title("Rice - sea and precipitation",'Interpreter','latex', 'FontSize',10)
 
 nexttile
-load('generated_data\maize_av_sea_csi_100av_2025-05-16_11-12.mat');
-simulation = parameters.end_time - mean(result.A, 3)*(parameters.end_time-parameters.start_time);
+load('generated_data\maize_av_prec_sea_100av_2025-06-18_05-15.mat')
+simulation = (parameters.end_time - mean(result.A, 3)*(parameters.end_time-parameters.start_time))/1000;
 [~, ~, t_max] = size(result.A);
-plot_map(parameters, parameters.dataset_bp, false, simulation);
+plot_map_flat(parameters, parameters.dataset_bp/1000, false, simulation);
 colormap(pepper)
-title("Maize - sea and crop suitability",'Interpreter','latex', 'FontSize',10)
+title("Maize - sea and precipitation",'Interpreter','latex', 'FontSize',10)
 
 
 set(gcf, 'Color', 'White', 'Alphamap',0)
 
-saveas(gcf,"saved_plots/maps_and_errors.pdf")
+% saveas(gcf,"saved_plots/maps_and_errors.pdf")
+exportgraphics(gcf,'saved_plots/maps_and_errors.pdf','ContentType','vector')
 
+%% map plot 1 x 2
+addpath("src")
 
+f = figure();
+f.Position = [100 100 400 180];
+load('generated_data\all_wheat_av_prec_sea_100av_2025-06-08_07-44.mat')
+simulation = (parameters.end_time - mean(result.A, 3)*(parameters.end_time-parameters.start_time))/1000;
+[~, ~, t_max] = size(result.A);
+plot_map_flat(parameters, parameters.dataset_bp/1000, false, simulation);
+colormap(pepper)
+title("Wheat - sea and precipitation",'Interpreter','latex', 'FontSize',8)
+set(gcf, 'Color', 'White', 'Alphamap',0)
+yticks([])
+ylabel([])
+xticks([])
+xlabel([])
+exportgraphics(gcf,'saved_plots/maps_and_errors_wheat.pdf','ContentType','vector')
+
+f = figure();
+f.Position = [100 100 220 200];
+load('generated_data\cobo_av_prec_sea_100av_2025-06-16_06-15.mat')
+simulation = (parameters.end_time - mean(result.A, 3)*(parameters.end_time-parameters.start_time))/1000;
+[~, ~, t_max] = size(result.A);
+plot_map_flat(parameters, parameters.dataset_bp/1000, false, simulation);
+colormap(pepper)
+title("Rice - sea and precipitation",'Interpreter','latex', 'FontSize',8)
+yticks([])
+ylabel([])
+xticks([])
+xlabel([])
+set(gcf, 'Color', 'White', 'Alphamap',0)
+exportgraphics(gcf,'saved_plots/maps_and_errors_rice.pdf','ContentType','vector')
+
+f = figure();
+f.Position = [100 100 190 200];
+load('generated_data\maize_av_prec_sea_100av_2025-06-18_05-15.mat')
+simulation = (parameters.end_time - mean(result.A, 3)*(parameters.end_time-parameters.start_time))/1000;
+[~, ~, t_max] = size(result.A);
+plot_map_flat(parameters, parameters.dataset_bp/1000, false, simulation);
+colormap(pepper)
+title("Maize - sea and precipitation",'Interpreter','latex', 'FontSize',8)
+set(gcf, 'Color', 'White', 'Alphamap',0)
+yticks([])
+ylabel([])
+xticks([])
+xlabel([])
+exportgraphics(gcf,'saved_plots/maps_and_errors_maize.pdf','ContentType','vector')
+
+% saveas(gcf,"saved_plots/maps_and_errors.pdf")
 %% dist vs time
 
-custom_colors = [0 0 0;      
-                0.5 0.5 0.5;  
-                0.6 0 0];
+custom_colors = [pepper(200,:);      
+                pepper(5,:);  
+                pepper(100,:)];
+
 size_pt = 7;
 
 % WHEAT
 subplot(3,1,1)
 hold on
-load('generated_data\all_wheat_av_100av_2025-03-24_11-09.mat')
+load('generated_data\all_wheat_av_100av_2025-06-14_02-27.mat')
 [min_time, min_time_idx] = min(parameters.dataset_bp);
 
 
@@ -605,24 +671,29 @@ dist_km = deg2km(dist);
 [max_time, max_time_idx] = max(dist_km);
 [~, ~, t_max] = size(result.A);
 
-s1 = scatter(parameters.dataset_bp, dist_km, "filled");
+s1 = scatter(parameters.dataset_bp, dist_km, 'Marker', '+');
 s1.SizeData = size_pt;
 s1.MarkerFaceColor = custom_colors(1,:);
+s1.MarkerEdgeColor = custom_colors(1,:);
 s1.MarkerFaceAlpha = 0.8;
 
 simulation_times = parameters.start_time - result.times/t_max*(parameters.start_time-parameters.end_time);
 A= [simulation_times(min_time_idx) simulation_times(max_time_idx)];
 B=[dist_km(min_time_idx) dist_km(max_time_idx)];
-s2 = line(A,B);
-s2.LineWidth = 2;
+s2 = line(A,B, 'LineWidth',1);
 s2.Color = custom_colors(2,:);
 
-load('generated_data\all_wheat_av_prec_sea_100av_2025-03-28_14-02.mat')
+load('generated_data\all_wheat_av_prec_sea_100av_2025-06-08_07-44.mat')
 simulation_times = parameters.start_time - result.times/t_max*(parameters.start_time-parameters.end_time);
-s3 = scatter(simulation_times, dist_km, 'filled');
+s3 = scatter(simulation_times, dist_km);
 s3.MarkerFaceColor = custom_colors(3,:);
+s3.MarkerEdgeAlpha = 0;
 s3.SizeData = size_pt;
 s3.MarkerFaceAlpha = 0.8;
+
+s2 = line(A,B);
+s2.LineWidth = 1;
+s2.Color = custom_colors(2,:);
 
 pt = scatter([A(1)],[B(1)]);
 pt.SizeData = 200;
@@ -630,20 +701,21 @@ pt.LineWidth = 1.5;
 pt.MarkerEdgeColor = 'k';
 text(A(1),B(1)+2000, "origin",'HorizontalAlignment', 'center', 'Interpreter','latex','FontSize', 8)
 
-legend(["Original dataset",  "Average simulation", "Full simulation"], "Location", "northwest",'Interpreter','latex')
-xlabel("Time (yr)",'Interpreter','latex')
-ylabel("Absolute distance (deg)",'Interpreter','latex')
-title("Wheat", "FontSize",14,'Interpreter','latex')
+% legend(["Original dataset",  "Average simulation", "Full simulation"], "Location", "northeast",'Interpreter','latex')
+% xlabel("Time (yr)",'Interpreter','latex')
+ylabel("Distance (km)",'Interpreter','latex')
+title("\textbf{a.} Wheat", "FontSize",10,'Interpreter','latex')
 
 ylim([-1000,7000])
+xlim([-12000,2000])
 set(gca,"TickLabelInterpreter",'latex')
 
-% RICE
+% RICE 
 
 subplot(3,1,2)
 
 hold on
-load('generated_data\cobo_av_100av_2025-03-31_15-55.mat')
+load('generated_data\cobo_av_100av_2025-07-10_15-10.mat')
 [min_time, min_time_idx] = min(parameters.dataset_bp);
 dist = sqrt((parameters.dataset_lat-parameters.dataset_lat(min_time_idx)).^2 + (parameters.dataset_lon-parameters.dataset_lon(min_time_idx)).^2);
 dist_km = deg2km(dist);
@@ -651,16 +723,18 @@ dist_km = deg2km(dist);
 
 [~, ~, t_max] = size(result.A);
 
-s1 = scatter(parameters.dataset_bp, dist_km, "filled");
+s1 = scatter(parameters.dataset_bp, dist_km, 'Marker', '+');
 s1.SizeData = size_pt;
 s1.MarkerFaceColor = custom_colors(1,:);
+s1.MarkerEdgeColor = custom_colors(1,:);
 s1.MarkerFaceAlpha = 0.8;
 
 simulation_times = parameters.start_time - result.times/t_max*(parameters.start_time-parameters.end_time);
 [max_time, max_time_idx] = max(simulation_times);
 A= [simulation_times(min_time_idx) simulation_times(max_time_idx)];
 B=[dist_km(min_time_idx) dist_km(max_time_idx)];
-s2 = line(A,B);
+
+s2 = line(A,B, 'LineWidth', 1);
 s2.LineWidth = 2;
 s2.Color = custom_colors(2,:);
 
@@ -687,24 +761,25 @@ pt.MarkerEdgeColor = 'k';
 text(A2(1)-200,B2(1) + 2000, "origin 2",'HorizontalAlignment', 'center', 'Interpreter','latex','FontSize', 8)
 
 ylim([-1000, 7000])
-xlim([-5000, 2000])
+xlim([-12000,2000])
 
 
-load('generated_data\cobo_av_prec_sea_100av_2025-03-28_14-04.mat')
+load('generated_data\cobo_av_prec_sea_100av_2025-06-16_06-15.mat')
 simulation_times = parameters.start_time - result.times/t_max*(parameters.start_time-parameters.end_time);
 s3 = scatter(simulation_times, dist_km, 'filled');
 s3.MarkerFaceColor = custom_colors(3,:);
 s3.SizeData = size_pt;
 s3.MarkerFaceAlpha = 0.8;
 
-xlabel("Time (year)",'Interpreter','latex')
-ylabel("Absolute distance (km)",'Interpreter','latex')
-title("Rice", "FontSize",14,'Interpreter','latex')
+% xlabel("Time (year)",'Interpreter','latex')
+ylabel("Distance (km)",'Interpreter','latex')
+title("\textbf{b.} Rice", "FontSize",10,'Interpreter','latex')
+set(gca,"TickLabelInterpreter",'latex')
 
 % MAIZE
 subplot(3,1,3)
 hold on
-load('generated_data\maize_av_100av_2025-05-16_09-45.mat')
+load('generated_data\maize_av_100av_2025-06-16_09-06.mat')
 [min_time, min_time_idx] = min(parameters.dataset_bp);
 
 
@@ -714,24 +789,27 @@ dist_km = deg2km(dist);
 [max_time, max_time_idx] = max(dist_km);
 [~, ~, t_max] = size(result.A);
 
-s1 = scatter(parameters.dataset_bp, dist_km, "filled");
+s1 = scatter(parameters.dataset_bp, dist_km, 'Marker' ,'+');
 s1.SizeData = size_pt;
+s1.MarkerEdgeColor = custom_colors(1,:);
 s1.MarkerFaceColor = custom_colors(1,:);
 s1.MarkerFaceAlpha = 0.8;
 
 simulation_times = parameters.start_time - result.times/t_max*(parameters.start_time-parameters.end_time);
 A= [simulation_times(min_time_idx) simulation_times(max_time_idx)];
 B=[dist_km(min_time_idx) dist_km(max_time_idx)];
-s2 = line(A,B);
-s2.LineWidth = 2;
-s2.Color = custom_colors(2,:);
 
-load('generated_data\maize_av_sea_csi_100av_2025-05-16_11-12.mat')
+load('generated_data\maize_av_prec_sea_100av_2025-06-18_05-15.mat')
+dist = sqrt((parameters.dataset_lat-parameters.dataset_lat(min_time_idx)).^2 + (parameters.dataset_lon-parameters.dataset_lon(min_time_idx)).^2);
+dist_km = deg2km(dist);
 simulation_times = parameters.start_time - result.times/t_max*(parameters.start_time-parameters.end_time);
 s3 = scatter(simulation_times, dist_km, 'filled');
 s3.MarkerFaceColor = custom_colors(3,:);
 s3.SizeData = size_pt;
 s3.MarkerFaceAlpha = 0.8;
+
+s2 = line(A,B,'LineWidth',1);
+s2.Color = custom_colors(2,:);
 
 pt = scatter([A(1)],[B(1)]);
 pt.SizeData = 200;
@@ -740,16 +818,20 @@ pt.MarkerEdgeColor = 'k';
 text(A(1),B(1)+2000, "origin",'HorizontalAlignment', 'center', 'Interpreter','latex','FontSize', 8)
 
 xlabel("Time (yr)",'Interpreter','latex')
-ylabel("Absolute distance (deg)",'Interpreter','latex')
-title("Maize", "FontSize",14,'Interpreter','latex')
+ylabel("Distance (km)",'Interpreter','latex')
+title("\textbf{c.} Maize", "FontSize",10,'Interpreter','latex')
+
 
 ylim([-1000,7000])
+xlim([-12000,2000])
+legend(["Original dataset",  "Average simulation", "Full simulation"], "Location", "southwest",'Interpreter','latex')
+
 set(gca,"TickLabelInterpreter",'latex')
 
 set(gca,"TickLabelInterpreter",'latex')
 set(gcf, 'Color', 'White', 'Alphamap',0)
 
-saveas(gcf,"saved_plots/dist_vs_time.pdf")
+exportgraphics(gcf,"saved_plots/dist_vs_time.pdf", 'ContentType', 'vector')
 
 %% Table
 
