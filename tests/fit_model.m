@@ -313,7 +313,7 @@ save(filename, "result", '-append')
 %% Bootstrapp
 tic
 if get_errors
-    n_bootstraps = 1;
+    n_bootstraps = 50;
     
     bs_theta = zeros(n_bootstraps,length(theta_start));
     bs_errors = zeros(n_bootstraps, 1);
