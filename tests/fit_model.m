@@ -8,14 +8,14 @@ t = datetime;
 t.Format = 'yyyy-MM-dd_HH-mm';
 % choose whether to load or start
 load_data = false;
-get_errors = false;
+get_errors = true;
 
 %%
 if load_data == false
 
     number_of_averages = 50;
-    dataset = 'cobo'; %options: 'cobo','pinhasi','all_wheat','maize'
-    layers = {'av','sea'}; %full {'av' 'asym' 'csi','hydro' 'prec' 'tmean','sea','crop'}
+    dataset = 'all_wheat'; %options: 'cobo','pinhasi','all_wheat','maize'
+    layers = {'av','tmean', 'sea'}; %full {'av' 'asym' 'csi','hydro' 'prec' 'tmean','sea','crop'}
     directory = 'generated_data/';
 
     %create filename
@@ -303,14 +303,11 @@ plot_map(parameters, final_errors, true)
 %% Bootstrapp
 
 if get_errors
-    n_bootstraps = 5;
+    tic
+    n_bootstraps = 10;
     
     all_theta = zeros(n_bootstraps,length(theta_start));
     all_errors = zeros(n_bootstraps, 1);
-    factor = 1;
-    factor = 1e5;
-    [x,y,t] = get_dataset(dataset);
-    parameters =  data_prep(number_of_averages, active_layers, x, y, t);
     complete_dataset = parameters.dataset_idx;
     
     parameters.calculate_W = false;
@@ -325,12 +322,15 @@ if get_errors
     complete_dataset = parameters.dataset_idx;
     n = size(complete_dataset,1);
 
+    exitflags = zeros(n_bootstraps);
+    outputs = zeros(n_bootstraps);
+ 
     parfor i = 1:n_bootstraps
         rng(seeds(i));
         random_indices = randi(n,n,1);
         sampled_dataset = complete_dataset(random_indices,:);
 
-        factor = 1e4;
+        factor = 1e3;
         objective_function = @(theta) optimize_model_bootstraps(theta, parameters, sampled_dataset, factor);
         % WITH GRADIENT
         options = optimoptions('fminunc', ...
@@ -347,10 +347,14 @@ if get_errors
             'OutputFcn', @saveIterations, ... % Call the custom function
             "UseParallel", false);
 
-        [theta, fval, exitflag, output, grad, hessian] = fminunc(objective_function, theta_start, options);
+        [theta, fval, exitflag, output, ~, ~] = fminunc(objective_function, theta_start, options);
 
         all_theta(i,:) = theta;
         all_errors(i) = fval;
         disp(result.squared_error)
     end
+    theta_bootstrap = all_theta;
+    sq_errors_bootstrap = all_errors;
+    save(filename, 'theta_bootstrap', "sq_errors_bootstrap", '-append')
 end
+toc
