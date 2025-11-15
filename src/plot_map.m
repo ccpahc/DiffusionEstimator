@@ -22,12 +22,13 @@ function plot_map(parameters,errors, adjust_scale, A_result)
 
     worldmap(latlim, lonlim)
     
+    
     axis xy
 
     % color map with A
     if nargin > 3
 
-        geoshow(A, R, 'DisplayType', 'texturemap')
+        geoshow(A, R, 'DisplayType', 'surface')
     %make sea white
     end
     geoshow(fliplr([land.Lat]),fliplr([land.Lon]),'DisplayType', ...

@@ -1,8 +1,17 @@
 %% Start new run 
 
 clear all
-addpath("..\")
-addpath("src")
+% Get the directory containing this script
+currentDir = fileparts(mfilename('fullpath'));
+
+% Get the parent directory
+parentDir = fileparts(currentDir);
+
+% Define the 'src' folder path
+srcDir = fullfile(parentDir, 'src');
+% Add both directories to the MATLAB path
+cd(parentDir)
+addpath('src')
 tic
 t = datetime;
 t.Format = 'yyyy-MM-dd_HH-mm';
@@ -173,11 +182,11 @@ if level < 3
     speeds = distances./rel_times;
     speeds = speeds(~isnan(speeds));
     
-    figure (1)
-    histogram(speeds,linspace(0,1,21))
-    xlabel("Speed")
-    ylabel('Frequency')
-    title("Speed distribution")
+    % figure (1)
+    % histogram(speeds,linspace(0,1,21))
+    % xlabel("Speed")
+    % ylabel('Frequency')
+    % title("Speed distribution")
     
     if mean(speeds) > 0.6
         disp("Speeds are too high, decrease the time step for convergence")
@@ -194,6 +203,7 @@ end
 %% measure grid
 
 if level < 4
+    
     parameters.n = 20;
     [theta_start, on_edge, min_error, errors] = sweep(ranges, 11, 2, parameters);
 
@@ -210,12 +220,13 @@ if level < 4
         disp('Local minimum found')
     end
     save(filename, 'theta_start', "level", "min_error", '-append')
+    
 end
 
 %% Level 5 - run optimizer
 
 if level < 5
-    tic
+    
     % parameters = data_prep(number_of_averages, active_layers, x, y, t);
     factors = [1e5];
     all_params = {};
@@ -264,7 +275,6 @@ if level < 5
 
     level = 5;
     save(filename, 'theta_optim', "level", "min_error", "all_params", '-append')
-    disp(toc)
 end
 
 %%
@@ -278,7 +288,7 @@ end
 
 %% report results
 result = run_model(parameters,theta_optim);
-runtime = toc;
+
 A = result.A;
 final_errors = result.errors;
 times = result.times;
@@ -298,10 +308,10 @@ disp('Error in years: ' + string(sqrt(mean(result.squared_error))))
 
 save(filename, "result", '-append')
 
-plot_map(parameters, final_errors, true)
+% plot_map(parameters, final_errors, true)
 
 %% Bootstrapp
-
+tic
 if get_errors
     tic
     n_bootstraps = 10;
@@ -322,9 +332,6 @@ if get_errors
     complete_dataset = parameters.dataset_idx;
     n = size(complete_dataset,1);
 
-    exitflags = zeros(n_bootstraps);
-    outputs = zeros(n_bootstraps);
- 
     parfor i = 1:n_bootstraps
         rng(seeds(i));
         random_indices = randi(n,n,1);
@@ -339,7 +346,7 @@ if get_errors
             'HessianFcn','objective', ...
             'SpecifyObjectiveGradient',true, ...
             'StepTolerance', 5e-3, ...,
-            "FiniteDifferenceStepSize", 0.01, ...,
+            "FiniteDifferenceStepSize", 0.001, ...,
             "FunctionTolerance",0.00001, ...
             "OptimalityTolerance",2e-6, ...
             'MaxFunctionEvaluations', 10000, ...
@@ -349,12 +356,11 @@ if get_errors
 
         [theta, fval, exitflag, output, ~, ~] = fminunc(objective_function, theta_start, options);
 
-        all_theta(i,:) = theta;
-        all_errors(i) = fval;
-        disp(result.squared_error)
+        bs_theta(i,:) = theta;
+        bs_errors(i) = fval;
+        
     end
-    theta_bootstrap = all_theta;
-    sq_errors_bootstrap = all_errors;
-    save(filename, 'theta_bootstrap', "sq_errors_bootstrap", '-append')
+save(filename, "bs_theta", "bs_errors", '-append');
 end
-toc
+runtime = toc;
+save(filename, "runtime", '-append');
