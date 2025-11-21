@@ -10,11 +10,11 @@ function recentIdx = findMostRecentDateStruct(structArray)
 end
 database = {};
 
-load('generated_data\all_wheat_av_100av_2025-06-14_02-27.mat')
+load('generated_data\all_wheat_av_50av_2025-11-19_11-39.mat')
 av_sq_err = result.squared_error;
 metadata = struct();
 metadata.dataset = "wheat";
-metadata.file = 'generated_data\all_wheat_av_100av_2025-06-14_02-27.mat';
+metadata.file = 'generated_data\all_wheat_av_50av_2025-11-19_11-39.mat';
 metadata.layers = {'av'};
 
 metadata.theta = theta_optim;
@@ -22,7 +22,7 @@ metadata.theta = theta_optim;
 database{length(database)+1} = metadata;
 
 
-all_layers = {'asym' 'crop' 'hydro' 'prec' 'tmean','sea'};
+all_layers = {'asym' 'csi' 'hydro' 'prec' 'tmean','sea'};
 sq_errs = zeros(length(all_layers));
 
 
@@ -42,7 +42,7 @@ for idx1 = 1:length(all_layers)
         for n = 1:length(layers)
         to_find = [to_find,"_", (layers{n})];
         end
-        to_find = [to_find, "_100av*"];
+        to_find = [to_find, "_50av*"];
         to_find = strjoin(to_find,"");
         f = dir(fullfile(directory,to_find));
         if length(f)==0
@@ -88,17 +88,17 @@ colorbar;
 title("Wheat")
 
 %%
-load('generated_data\cobo_av_100av_2025-07-10_15-10.mat')
+load('generated_data\cobo_av_50av_2025-11-20_09-08.mat')
 result = run_model(parameters, theta_optim);
 metadata = struct();
 metadata.dataset = "rice";
-metadata.file = 'generated_data\cobo_av_100av_2025-07-10_15-10.mat';
+metadata.file = 'generated_data\cobo_av_50av_2025-11-20_09-08.mat';
 metadata.layers = {'av'};
 metadata.theta = theta_optim;
 
 database{length(database)+1} = metadata;
 av_sq_err = result.squared_error;
-all_layers = {'asym' 'crop' 'hydro' 'prec' 'tmean','sea'};
+all_layers = {'asym' 'csi' 'hydro' 'prec' 'tmean','sea'};
 sq_errs = zeros(length(all_layers));
 
 for idx1 = 1:length(all_layers)
@@ -116,7 +116,7 @@ for idx1 = 1:length(all_layers)
         for n = 1:length(layers)
         to_find = [to_find,"_", (layers{n})];
         end
-        to_find = [to_find, "_100av*"];
+        to_find = [to_find, "_50av*"];
         to_find = strjoin(to_find,"");
         f = dir(fullfile(directory,to_find));
         if length(f)==0
@@ -162,17 +162,17 @@ colorbar;
 title("Rice")
 
 %%
-load('generated_data\maize_av_100av_2025-06-16_09-06.mat')
+load('generated_data\maize_av_50av_2025-11-20_14-04.mat')
 result = run_model(parameters, theta_optim);
 metadata = struct();
 metadata.dataset = "maize";
-metadata.file = 'generated_data\maize_av_100av_2025-06-16_09-06.mat';
+metadata.file = 'generated_data\maize_av_50av_2025-11-20_14-04.mat';
 metadata.layers = {'av'};
 metadata.theta = theta_optim;
 
 database{length(database)+1} = metadata;
 av_sq_err = result.squared_error;
-all_layers = {'asym' 'crop' 'hydro' 'prec' 'tmean','sea'};
+all_layers = {'asym' 'csi' 'hydro' 'prec' 'tmean','sea'};
 sq_errs = zeros(length(all_layers));
 
 for idx1 = 1:length(all_layers)
@@ -190,7 +190,7 @@ for idx1 = 1:length(all_layers)
         for n = 1:length(layers)
         to_find = [to_find,"_", (layers{n})];
         end
-        to_find = [to_find, "_100av*"];
+        to_find = [to_find, "_50av*"];
         to_find = strjoin(to_find,"");
         f = dir(fullfile(directory,to_find));
         if length(f)==0

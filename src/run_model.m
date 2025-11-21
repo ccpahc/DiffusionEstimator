@@ -38,7 +38,7 @@ function result = run_model(parameters, theta, dataset)
     else
         rng(12)
     end
-    data_times = parameters.dataset_idx(:,3);
+    data_times = data(:,3);
 
     for rep = 1:parameters.n
         U = rand(size(A_start)).*parameters.W;

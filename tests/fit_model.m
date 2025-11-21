@@ -16,7 +16,7 @@ tic
 t = datetime;
 t.Format = 'yyyy-MM-dd_HH-mm';
 % choose whether to load or start
-load_data = false;
+load_data = true;
 get_errors = true;
 
 %%
@@ -24,7 +24,7 @@ if load_data == false
 
     number_of_averages = 50;
     dataset = 'all_wheat'; %options: 'cobo','pinhasi','all_wheat','maize'
-    layers = {'av','tmean', 'sea'}; %full {'av' 'asym' 'csi','hydro' 'prec' 'tmean','sea','crop'}
+    layers = {'av'}; %full {'av' 'asym' 'csi','hydro' 'prec' 'tmean','sea','crop'}
     directory = 'generated_data/';
 
     %create filename
@@ -45,8 +45,9 @@ end
 if load_data
     % filename
 
-    filename = "generated_data\all_wheat_av_100av_2025-03-24_11-09.mat";
+    filename = "generated_data\all_wheat_av_prec_sea_50av_2025-11-18_13-36.mat";
     load(filename);
+    dataset = 'all_wheat';
     
     load_data= true;
 end
@@ -311,10 +312,10 @@ save(filename, "result", '-append')
 % plot_map(parameters, final_errors, true)
 
 %% Bootstrapp
-tic
+
 if get_errors
-    tic
-    n_bootstraps = 10;
+    
+    n_bootstraps = 1;
     
     all_theta = zeros(n_bootstraps,length(theta_start));
     all_errors = zeros(n_bootstraps, 1);
@@ -332,7 +333,7 @@ if get_errors
     complete_dataset = parameters.dataset_idx;
     n = size(complete_dataset,1);
 
-    parfor i = 1:n_bootstraps
+    for i = 1:n_bootstraps
         rng(seeds(i));
         random_indices = randi(n,n,1);
         sampled_dataset = complete_dataset(random_indices,:);

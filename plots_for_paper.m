@@ -264,27 +264,27 @@ addpath("src")
 
 load('generated_data\filename_database.mat')
 
-load('generated_data\all_wheat_av_100av_2025-06-14_02-27.mat')
+load('generated_data\all_wheat_av_50av_2025-11-19_11-39.mat')
 labels_w = {};
 labels_w{1} = "av";
-sq_errors_w = [mean(spread_errors_shuffle)^2];
-yr_errors_w = [mean(spread_errors_shuffle)];
-yr_errorbar_w = [std(spread_errors_shuffle)];
+sq_errors_w = [mean(bs_errors)];
+yr_errors_w = [mean(bs_errors.^0.5)];
+yr_errorbar_w = [std(bs_errors.^0.5)];
 
-load('generated_data\cobo_av_100av_2025-07-10_15-10.mat')
+load('generated_data\cobo_av_50av_2025-11-20_09-08.mat')
 result = run_model(parameters, theta_optim);
 labels_r = {};
 labels_r{1} = "av";
-sq_errors_r = [mean(spread_errors_shuffle)^2];
-yr_errors_r = [mean(spread_errors_shuffle)];
-yr_errorbar_r = [std(spread_errors_shuffle)];
+sq_errors_r = [mean(bs_errors)];
+yr_errors_r = [mean(bs_errors.^0.5)];
+yr_errorbar_r = [std(bs_errors.^0.5)];
 
-load('generated_data\maize_av_100av_2025-06-16_09-06.mat')
+load('generated_data\maize_av_50av_2025-11-20_14-04.mat')
 result = run_model(parameters, theta_optim);
 labels_m = {};
-sq_errors_m = [mean(spread_errors_shuffle)^2];
-yr_errors_m = [mean(spread_errors_shuffle)];
-yr_errorbar_m = [std(spread_errors_shuffle)];
+sq_errors_m = [mean(bs_errors)];
+yr_errors_m = [mean(bs_errors.^0.5)];
+yr_errorbar_m = [std(bs_errors.^0.5)];
 
 for i=1:length(database)
     if (length(database{i}.layers) == 2)
@@ -302,33 +302,29 @@ for i=1:length(database)
         disp(database{i}.layers)
         labels_w{length(labels_w)+1} = database{i}.layers{1};
         load(database{i}.file)
-        sq_errors_w = [sq_errors_w result.squared_error];
-        % yr_errors_w = [yr_errors_w sqrt(result.squared_error)];
-        % yr_errorbar_w = [yr_errorbar_w 0];
-        yr_errors_w = [yr_errors_w mean(spread_errors_shuffle)];
-        yr_errorbar_w = [yr_errorbar_w std(spread_errors_shuffle)];
+        sq_errors_w = [sq_errors_w mean(bs_errors)];
+        yr_errors_w = [yr_errors_w mean(bs_errors.^0.5)];
+        yr_errorbar_w = [yr_errorbar_w std(bs_errors.^0.5)];
     elseif ismember('rice', database{i}.dataset)
         disp(database{i}.layers)
         labels_r{length(labels_r)+1} = database{i}.layers{1};
         load(database{i}.file)
-        sq_errors_r = [sq_errors_r result.squared_error];
-        yr_errors_r = [yr_errors_r mean(spread_errors_shuffle)];
-        yr_errorbar_r = [yr_errorbar_r std(spread_errors_shuffle)];
-        % yr_errors_r = [yr_errors_r sqrt(result.squared_error)];
-        % yr_errorbar_r = [yr_errorbar_r 0];
+        sq_errors_r = [sq_errors_r mean(bs_errors)];
+        yr_errors_r = [yr_errors_r mean(bs_errors.^0.5)];
+        yr_errorbar_r = [yr_errorbar_r std(bs_errors.^0.5)];
+
     elseif ismember('maize',database{i}.dataset)
         disp(database{i}.layers)
         labels_m{length(labels_m)+1} = database{i}.layers{1};
         load(database{i}.file)
-        sq_errors_m = [sq_errors_m result.squared_error];
-        yr_errors_m = [yr_errors_m mean(spread_errors_shuffle)];
-        yr_errorbar_m = [yr_errorbar_m std(spread_errors_shuffle)];
-        % yr_errors_m = [yr_errors_m sqrt(result.squared_error)];
-        % yr_errorbar_m = [yr_errorbar_m 0];
+        sq_errors_m = [sq_errors_m mean(bs_errors)];
+        yr_errors_m = [yr_errors_m mean(bs_errors.^0.5)];
+        yr_errorbar_m = [yr_errorbar_m std(bs_errors.^0.5)];
+
     end
 
-    clear result
-    clear spread_errors_boot
+    clear bs_errors
+
 end
 
 
@@ -339,48 +335,10 @@ yr_errors = [yr_errors_w(w_idx); yr_errors_r(w_idx); yr_errors_m(w_idx)];
 sq_errors = [sq_errors_w(w_idx); sq_errors_r(w_idx); sq_errors_m(w_idx)];
 yr_errorbar = [yr_errorbar_w(w_idx); yr_errorbar_r(w_idx); yr_errorbar_m(w_idx)];
 
-%%
-
-f = figure(1);
-f.Position = [100 100 400 300];
-hold on
-b2 = bar([0 1 2], yr_errors/1e3);
-% set(gca,'XTickLabel', {"wheat", "rice"})
-
-x_errorbar = [-3 -2 -1 0 1 2 3].*0.115;
-e1 = errorbar(x_errorbar, yr_errors_w(w_idx)/1e3,yr_errorbar_w/1e3, "LineStyle","none", 'CapSize',10, 'Color', 'k', "LineWidth",1);
-e2 = errorbar(x_errorbar + 1, yr_errors_r(w_idx)/1e3,yr_errorbar_r/1e3, "LineStyle","none", 'CapSize',10, 'Color', 'k', "LineWidth",1);
-e3 = errorbar(x_errorbar + 2, yr_errors_m(w_idx)/1e3, yr_errorbar_m/1e3, "LineStyle","none", 'CapSize',10, 'Color', 'k', "LineWidth",1);
-xticks([0 1 2])
-xticklabels({"wheat", "rice", "maize"})
-cmap = pepper(1:end-60,:);
-% ylim([0, 3.2])
-
-layer_names = {"baseline",'asymmetry','river size','precipitation','mean temperature','crop suitability','sea'};
-for k = 1:length(yr_errors_r)
-    % b2(k).FaceColor = cmap(int16((k)*length(cmap)/(length(yr_errors_r)+1)),:);
-    xpos = b2(k).XEndPoints;  % Get x-position of bars
-    ypos = b2(k).YEndPoints+0.02;  % Get y-position of bars
-    % text(xpos, ypos, layer_names{w_idx(k)}, ...
-    %     'HorizontalAlignment', 'left', ...
-    %     'VerticalAlignment', 'middle', ...
-    %     'FontSize', 8,'Interpreter','latex','Rotation',90);
-    text(xpos, zeros(size(xpos))+0.05, layer_names{w_idx(k)}, ...
-        'HorizontalAlignment', 'left', ...
-        'VerticalAlignment', 'middle', ...
-        'FontSize', 9,'Interpreter','latex','Rotation',90, 'Color','w');
-end 
-ylabel("Obj. Function",'Interpreter','latex')
-% title("With sea layer",'Interpreter','latex')
-grid on
-set(gca,"TickLabelInterpreter",'latex')
-set(gcf, 'Color', 'White', 'Alphamap',0)
-
-saveas(gcf,"saved_plots/results_bar_chart.pdf")
-
 %% horizontal bar chart
 f = figure(1);
 f.Position = [100 100 800 180];
+x_errorbar = [-3 -2 -1 0 1 2 3].*0.115;
 tiledlayout(1,3, 'Padding', 'none', 'TileSpacing', 'compact'); 
 for p = 1:3
     nexttile    
@@ -388,7 +346,7 @@ for p = 1:3
     b2 = barh([0], fliplr(yr_errors(p,:))/1e3);
     cmap = pepper(end-60:-1:1,:);
     yticks([])
-    ylabel({"Geographical layer"},'Interpreter','latex', "FontSize",8, 'Rotation',90)
+    ylabel({"Geographical layer"},'Interpreter','latex', "FontSize",8, 'Rotation',90, 'Color','k')
     if p == 1
         title("Wheat",'Interpreter','latex')
         e1 = errorbar(yr_errors_w(fliplr(w_idx))/1e3, x_errorbar,yr_errorbar_w(fliplr(w_idx))/1e3, 'horizontal', "LineStyle","none", 'CapSize',8, 'Color', 'k', "LineWidth",1);
@@ -412,12 +370,13 @@ for p = 1:3
             'VerticalAlignment', 'middle', ...
             'FontSize', 8,'Interpreter','latex','Rotation',0, 'Color','w');
     end 
-    xlabel("Average error (kyears)","FontSize", 8,'Interpreter','latex')
+    xlabel("Average error (kyears)","FontSize", 8,'Interpreter','latex', 'Color','k')
     set(gca,"TickLabelInterpreter",'latex')
+    set(gcf, 'Color', 'White', 'Alphamap',0)
     grid on
 end
 
-set(gcf, 'Color', 'White', 'Alphamap',0)
+set(gcf, 'Color', 'White', 'Alphamap',1)
 
 % saveas(gcf,"saved_plots/results_horizontal_bar_chart.pdf")
 exportgraphics(gcf,'saved_plots/results_horizontal_bar_chart.pdf','ContentType','vector')
@@ -565,48 +524,13 @@ yticklabels([])
 
 % saveas(gcf,"saved_plots/results_error_plots.pdf")
 exportgraphics(gcf,'saved_plots/results_error_plots.pdf','ContentType','vector')
-%% map plot
-addpath("src")
-f = figure();
-f.Position = [100 100 800 200];
-tiledlayout(1,3, 'Padding', 'none', 'TileSpacing', 'compact'); 
-
-nexttile
-load('generated_data\all_wheat_av_prec_sea_100av_2025-06-08_07-44.mat')
-simulation = (parameters.end_time - mean(result.A, 3)*(parameters.end_time-parameters.start_time))/1000;
-[~, ~, t_max] = size(result.A);
-plot_map_flat(parameters, parameters.dataset_bp/1000, false, simulation);
-colormap(pepper)
-title("Wheat - sea and precipitation",'Interpreter','latex')
-
-nexttile
-load('generated_data\cobo_av_prec_sea_100av_2025-06-16_06-15.mat')
-simulation = (parameters.end_time - mean(result.A, 3)*(parameters.end_time-parameters.start_time))/1000;
-[~, ~, t_max] = size(result.A);
-plot_map_flat(parameters, parameters.dataset_bp/1000, false, simulation);
-colormap(pepper)
-title("Rice - sea and precipitation",'Interpreter','latex', 'FontSize',10)
-
-nexttile
-load('generated_data\maize_av_prec_sea_100av_2025-06-18_05-15.mat')
-simulation = (parameters.end_time - mean(result.A, 3)*(parameters.end_time-parameters.start_time))/1000;
-[~, ~, t_max] = size(result.A);
-plot_map_flat(parameters, parameters.dataset_bp/1000, false, simulation);
-colormap(pepper)
-title("Maize - sea and precipitation",'Interpreter','latex', 'FontSize',10)
-
-
-set(gcf, 'Color', 'White', 'Alphamap',0)
-
-% saveas(gcf,"saved_plots/maps_and_errors.pdf")
-exportgraphics(gcf,'saved_plots/maps_and_errors.pdf','ContentType','vector')
 
 %% map plot 1 x 2
 addpath("src")
 
 f = figure();
 f.Position = [100 100 1000 500];
-load('generated_data\all_wheat_av_prec_sea_100av_2025-06-08_07-44.mat')
+load('generated_data\old\all_wheat_av_prec_sea_100av_2025-06-08_07-44.mat')
 simulation = (parameters.end_time - mean(result.A, 3)*(parameters.end_time-parameters.start_time))/1000;
 [~, ~, t_max] = size(result.A);
 plot_map_flat(parameters, parameters.dataset_bp/1000, false, simulation);
@@ -617,14 +541,14 @@ yticks([])
 ylabel([])
 xticks([])
 xlabel([])
-exportgraphics(gcf,'saved_plots/maps_and_errors_wheat.pdf','ContentType','vector')
+exportgraphics(gcf,'saved_plots/maps_and_errors_wheat.svg','ContentType','vector')
 
 f = figure();
-f.Position = [100 100 580 500];
-load('generated_data\cobo_av_prec_sea_100av_2025-06-16_06-15.mat')
+f.Position = [100 100 700 500];
+load('generated_data\old\cobo_av_prec_sea_100av_2025-06-16_06-15.mat')
 simulation = (parameters.end_time - mean(result.A, 3)*(parameters.end_time-parameters.start_time))/1000;
 [~, ~, t_max] = size(result.A);
-plot_map_flat(parameters, parameters.dataset_bp/1000, false, simulation);
+plot_map_flat(parameters, parameters.dataset_bp/1000, false, simulation, [1 0.9 1]);
 colormap(pepper)
 title("Rice - sea and precipitation",'Interpreter','latex', 'FontSize',8*2, 'Color','k')
 yticks([])
@@ -632,11 +556,11 @@ ylabel([])
 xticks([])
 xlabel([])
 set(gcf, 'Color', 'White', 'Alphamap',0)
-exportgraphics(gcf,'saved_plots/maps_and_errors_rice.pdf','ContentType','vector')
+exportgraphics(gcf,'saved_plots/maps_and_errors_rice.svg','ContentType','vector')
 
 f = figure();
-f.Position = [100 100 480 500];
-load('generated_data\maize_av_prec_sea_100av_2025-06-18_05-15.mat')
+f.Position = [100 100 500 450];
+load('generated_data\old\maize_av_prec_sea_100av_2025-06-18_05-15.mat')
 simulation = (parameters.end_time - mean(result.A, 3)*(parameters.end_time-parameters.start_time))/1000;
 [~, ~, t_max] = size(result.A);
 plot_map_flat(parameters, parameters.dataset_bp/1000, false, simulation);
@@ -647,7 +571,7 @@ yticks([])
 ylabel([])
 xticks([])
 xlabel([])
-exportgraphics(gcf,'saved_plots/maps_and_errors_maize.pdf','ContentType','vector')
+exportgraphics(gcf,'saved_plots/maps_and_errors_maize.svg','ContentType','vector')
 
 % saveas(gcf,"saved_plots/maps_and_errors.pdf")
 %% dist vs time

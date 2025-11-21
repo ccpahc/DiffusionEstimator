@@ -37,8 +37,8 @@ function plot_map_flat(parameters, errors, adjust_scale, A_result, aspect)
     colormap(cmap);
     
     % Plot error points
-    s = scatter(parameters.dataset_lon, parameters.dataset_lat, 8, errors, 'filled', 'MarkerEdgeColor', "white", 'LineWidth', .01);
-    
+    s = scatter(parameters.dataset_lon, parameters.dataset_lat, 8, errors, 'filled', 'MarkerEdgeColor', [1, 0.95, 0.9], 'LineWidth', .01);
+    s.MarkerEdgeAlpha = 0.2;
     % Set color limits
     if nargin > 2 && adjust_scale
         max_abs_value = max(abs(errors(:)));

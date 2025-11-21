@@ -41,8 +41,8 @@ lon = -180+delta/2:delta:180-delta/2;
 
 [lonmtx, latmtx] = meshgrid(lon, lat);
 
-save(filename,'-v7.3');
-
+% save(filename,'-v7.3');
+save(filename, '-append')
 
 %% Weights Grid
 
@@ -249,6 +249,35 @@ csidata = (csidata - csidata_mean)/csidata_std;
 csidata(sea_layer) = 0;
 
 save(filename, 'csidata', '-append')
+
+%% Human mobility index
+
+disp('Galor and Ozak HMI')
+
+fn = 'data/raw/HMI/HMISea10.tif';
+
+data = imread(fn);
+
+% Actual delta
+delta_act = 1/12;
+
+delta_rel = delta/delta_act;
+% hmidata = zeros(round(delta_rel*length(lat)), round(delta_rel*length(lon)));
+% hmidata(round(delta_rel*length(lat)-size(data,1)+1):end,:) = data;
+
+if delta ~= delta_act
+    hmidata = imresize(data, [length(lat) length(lon)]);
+end
+
+hmidata = flipud(hmidata);
+hmidata(hmidata<0) = 0;
+
+hmidata_mean = mean(hmidata(~sea_layer));
+hmidata_std = std(hmidata(~sea_layer));
+hmidata = (hmidata - hmidata_mean)/hmidata_std;
+hmidata(sea_layer) = 0;
+
+save(filename, 'hmidata', '-append')
 
 %% Crop specific layers
 
