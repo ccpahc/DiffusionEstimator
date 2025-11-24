@@ -53,10 +53,13 @@ octave-workspace
 *.pdf
 *.gif
 *.fig
-*.sgv
+*.svg
 
 # ignore data/raw folder
 data/raw/
+generated_data/*
+saved_plots/*
+
 
 # ignore output files 
 *.out
