@@ -21,7 +21,7 @@ function plot_map_flat(parameters, errors, adjust_scale, A_result, aspect)
     
     % Plot base map
     if nargin > 3
-        imagesc(parameters.lon, parameters.lat, A);
+        imagesc(parameters.lon, parameters.lat, A, [min(errors) max(errors)]);
     end
     axis xy;
     
@@ -37,7 +37,7 @@ function plot_map_flat(parameters, errors, adjust_scale, A_result, aspect)
     colormap(cmap);
     
     % Plot error points
-    s = scatter(parameters.dataset_lon, parameters.dataset_lat, 8, errors, 'filled', 'MarkerEdgeColor', [1, 0.95, 0.9], 'LineWidth', .01);
+    s = scatter(parameters.dataset_lon, parameters.dataset_lat, 8, errors, 'filled', 'MarkerEdgeColor', [0.2, 0.2, 0.2], 'LineWidth', .05);
     s.MarkerEdgeAlpha = 0.2;
     % Set color limits
     if nargin > 2 && adjust_scale
@@ -50,8 +50,9 @@ function plot_map_flat(parameters, errors, adjust_scale, A_result, aspect)
     % Add colorbar
     cb = colorbar;
     cb.FontSize = 8;
+    cb.Location = "southoutside";
     set(cb, 'TickLabelInterpreter', 'latex', 'FontSize', 8*2);
-    ylabel(cb, '$\hat{Y}_\ell, Y_\ell$ (kyears)', 'FontSize', 8*2, 'Interpreter', 'latex', 'Rotation',-90, 'Color','k');
+    ylabel(cb, '$\hat{Y}_\ell, Y_\ell$ (kyears)', 'FontSize', 8*2, 'Interpreter', 'latex', 'Rotation',0, 'Color','k');
     % tickLabels = cb.TickLabels; % Get current tick labels
     % for i = 1:length(tickLabels)
     %     tickLabels{i} = ['\textcolor{black}{', tickLabels{i}, '}']; % Wrap in color command

@@ -46,7 +46,7 @@ save(filename, '-append')
 
 %% Weights Grid
 
-w = cos(lat/90);
+w = cos(pi*lat/18s0);
 
 W = repmat(w',1,length(lon));
 

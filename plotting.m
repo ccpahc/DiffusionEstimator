@@ -10,11 +10,11 @@ function recentIdx = findMostRecentDateStruct(structArray)
 end
 database = {};
 
-load('generated_data\all_wheat_av_50av_2025-11-19_11-39.mat')
+load('generated_data\all_wheat_av_100av_2026-01-06_01-26.mat')
 av_sq_err = result.squared_error;
 metadata = struct();
 metadata.dataset = "wheat";
-metadata.file = 'generated_data\all_wheat_av_50av_2025-11-19_11-39.mat';
+metadata.file = 'generated_data\all_wheat_av_100av_2026-01-06_01-26.mat';
 metadata.layers = {'av'};
 
 metadata.theta = theta_optim;
@@ -42,7 +42,7 @@ for idx1 = 1:length(all_layers)
         for n = 1:length(layers)
         to_find = [to_find,"_", (layers{n})];
         end
-        to_find = [to_find, "_50av*"];
+        to_find = [to_find, "_100av*"];
         to_find = strjoin(to_find,"");
         f = dir(fullfile(directory,to_find));
         if length(f)==0
@@ -68,6 +68,7 @@ for idx1 = 1:length(all_layers)
         end
         sq_errs(idx1,idx2) = result.squared_error;
         clear("result")
+        clear("theta_optim")
     end
 end
 sq_errors = 1 - sq_errs/av_sq_err;
@@ -88,11 +89,11 @@ colorbar;
 title("Wheat")
 
 %%
-load('generated_data\cobo_av_50av_2025-11-20_09-08.mat')
+load('generated_data\cobo_av_100av_2026-01-06_08-00.mat')
 result = run_model(parameters, theta_optim);
 metadata = struct();
 metadata.dataset = "rice";
-metadata.file = 'generated_data\cobo_av_50av_2025-11-20_09-08.mat';
+metadata.file = 'generated_data\cobo_av_100av_2026-01-05_08-27.mat';
 metadata.layers = {'av'};
 metadata.theta = theta_optim;
 
@@ -116,7 +117,7 @@ for idx1 = 1:length(all_layers)
         for n = 1:length(layers)
         to_find = [to_find,"_", (layers{n})];
         end
-        to_find = [to_find, "_50av*"];
+        to_find = [to_find, "_100av*"];
         to_find = strjoin(to_find,"");
         f = dir(fullfile(directory,to_find));
         if length(f)==0
@@ -162,11 +163,11 @@ colorbar;
 title("Rice")
 
 %%
-load('generated_data\maize_av_50av_2025-11-20_14-04.mat')
+load('generated_data\maize_av_100av_2026-01-29_10-10.mat')
 result = run_model(parameters, theta_optim);
 metadata = struct();
 metadata.dataset = "maize";
-metadata.file = 'generated_data\maize_av_50av_2025-11-20_14-04.mat';
+metadata.file = 'generated_data\maize_av_100av_2026-01-29_10-10.mat';
 metadata.layers = {'av'};
 metadata.theta = theta_optim;
 
@@ -190,7 +191,7 @@ for idx1 = 1:length(all_layers)
         for n = 1:length(layers)
         to_find = [to_find,"_", (layers{n})];
         end
-        to_find = [to_find, "_50av*"];
+        to_find = [to_find, "_100av*"];
         to_find = strjoin(to_find,"");
         f = dir(fullfile(directory,to_find));
         if length(f)==0

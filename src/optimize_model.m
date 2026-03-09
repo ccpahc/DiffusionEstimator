@@ -3,9 +3,9 @@ function [error, grad, hessian] = optimize_model(theta, parameters, factor)
     error = result.squared_error;
     if nargout > 1
         f = @(theta) run_model(parameters, theta).squared_error;
-        grad = calculateGradient(f, theta, 0.01, factor);
+        grad = calculateGradient(f, theta, 0.0000005, factor);
     end
     if nargout > 2
-        hessian = calculateHessian(f, theta, 0.01);
+        hessian = calculateHessian(f, theta, 0.0000005);
     end
 end

@@ -10,20 +10,20 @@ parentDir = fileparts(currentDir);
 % Define the 'src' folder path
 srcDir = fullfile(parentDir, 'src');
 % Add both directories to the MATLAB path
-cd(parentDir)
+% cd(parentDir)
 addpath('src')
 tic
 t = datetime;
 t.Format = 'yyyy-MM-dd_HH-mm';
 % choose whether to load or start
 load_data = true;
-get_errors = true;
+get_errors = false;
 
 %%
 if load_data == false
 
-    number_of_averages = 50;
-    dataset = 'all_wheat'; %options: 'cobo','pinhasi','all_wheat','maize'
+    number_of_averages = 100;
+    dataset = 'maize'; %options: 'cobo','pinhasi','all_wheat','maize'
     layers = {'av'}; %full {'av' 'asym' 'csi','hydro' 'prec' 'tmean','sea','crop'}
     directory = 'generated_data/';
 
@@ -45,9 +45,9 @@ end
 if load_data
     % filename
 
-    filename = "generated_data\all_wheat_av_prec_sea_50av_2025-11-18_13-36.mat";
+    filename = "generated_data\cobo_av_sea_100av_2026-01-06_09-18.mat";
     load(filename);
-    dataset = 'all_wheat';
+    dataset = 'cobo';
     
     load_data= true;
 end
@@ -183,11 +183,11 @@ if level < 3
     speeds = distances./rel_times;
     speeds = speeds(~isnan(speeds));
     
-    % figure (1)
-    % histogram(speeds,linspace(0,1,21))
-    % xlabel("Speed")
-    % ylabel('Frequency')
-    % title("Speed distribution")
+    figure (1)
+    histogram(speeds,linspace(0,1,21))
+    xlabel("Speed")
+    ylabel('Frequency')
+    title("Speed distribution")
     
     if mean(speeds) > 0.6
         disp("Speeds are too high, decrease the time step for convergence")
@@ -229,11 +229,11 @@ end
 if level < 5
     
     % parameters = data_prep(number_of_averages, active_layers, x, y, t);
-    factors = [1e5];
+    factors = [1e3];
     all_params = {};
     for factor=factors
     
-        objective_function = @(theta) optimize_model(theta, parameters, factor);
+        objective_function = @(theta) optimize_model_mean(theta, parameters, factor);
         theta_start = theta_start;
         
         % WITH GRADIENT
@@ -309,7 +309,7 @@ disp('Error in years: ' + string(sqrt(mean(result.squared_error))))
 
 save(filename, "result", '-append')
 
-% plot_map(parameters, final_errors, true)
+plot_map(parameters, final_errors, true)
 
 %% Bootstrapp
 
@@ -355,7 +355,8 @@ if get_errors
             'OutputFcn', @saveIterations, ... % Call the custom function
             "UseParallel", false);
 
-        [theta, fval, exitflag, output, ~, ~] = fminunc(objective_function, theta_start, options);
+        theta_start_i = theta_start - 0.01 + rand(1,3)*0.02;
+        [theta, fval, exitflag, output, ~, ~] = fminunc(objective_function, theta_start_i, options);
 
         bs_theta(i,:) = theta;
         bs_errors(i) = fval;

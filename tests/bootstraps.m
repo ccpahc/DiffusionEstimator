@@ -1,7 +1,7 @@
 
 addpath('src');
 load('generated_data\filename_database.mat')
-n_bootstraps = 100;
+n_bootstraps = 10;
 for d=1:length(database)
     if (length(database{d}.layers) == 2)
         if ~all(ismember('sea', database{d}.layers))
@@ -12,8 +12,8 @@ for d=1:length(database)
             continue
         end
 
-    elseif ismember(database{d}.dataset,{"wheat","rice"})
-        continue
+    % elseif ismember(database{d}.dataset,{"wheat","rice"})
+    %     continue
 
     end
     
@@ -22,7 +22,9 @@ for d=1:length(database)
     load(database{d}.file)
     disp(database{d}.file)
     if exist('spread_errors_boot')
-        if mean(spread_errors_boot) > 0
+        if (length(spread_errors_boot) == n_bootstraps) & (sum(spread_errors_boot)>0)
+            clear spread_sq_errors_boot
+            clear spread_errors_boot
             continue
         end
     end
