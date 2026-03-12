@@ -16,14 +16,14 @@ tic
 t = datetime;
 t.Format = 'yyyy-MM-dd_HH-mm';
 % choose whether to load or start
-load_data = true;
+load_data = false;
 get_errors = false;
 
 %%
 if load_data == false
 
     number_of_averages = 100;
-    dataset = 'maize'; %options: 'cobo','pinhasi','all_wheat','maize'
+    dataset = 'cobo'; %options: 'cobo','pinhasi','all_wheat','maize'
     layers = {'av'}; %full {'av' 'asym' 'csi','hydro' 'prec' 'tmean','sea','crop'}
     directory = 'generated_data/';
 
