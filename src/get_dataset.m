@@ -61,7 +61,7 @@ function [x,y,t] = get_dataset(dataset)
         y = maize.Longitude;
         t = maize.Year;
 
-        new_maize_data = readtable("C:\Users\mperuzzo\OneDrive - Nexus365\Documents\bottlenecks\data\raw\hart_maize\p3k14c_2022.06.csv");
+        new_maize_data = readtable("data/raw/hart_maize/p3k14c_2022.06.csv");
         taxa = new_maize_data.Taxa;
         maize_ind = [];
         for i=1:length(taxa)
