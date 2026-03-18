@@ -16,8 +16,8 @@ function [best_theta, best_result, info] = grad_descent_sweep(theta0, parameters
     objective_function = get_opt(options, 'objective_function', @(theta) optimize_model(theta, parameters, 1));
     gradient_objective = get_opt(options, 'gradient_objective', objective_function);
     result_function = get_opt(options, 'result_function', @(theta) run_model(parameters, theta));
-    gradient_steps = get_opt(options, 'gradient_steps', fliplr(logspace(-2.8, -1.6, 4)));
-    steps = get_opt(options, 'steps', fliplr([-0.01 0.01 0.02 0.05 0.15]));
+    gradient_steps = get_opt(options, 'gradient_steps', fliplr([0.01 0.02 0.05 0.1]));
+    steps = get_opt(options, 'steps', fliplr([0.002 0.01 0.02 0.05 0.15]));
     verbose = get_opt(options, 'verbose', false);
     debug = get_opt(options, 'debug', false);
 

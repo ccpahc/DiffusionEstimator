@@ -128,7 +128,7 @@ function state = fit_model(crop, layers, do_bootstraps, file_to_load, level_to_l
 
     if do_bootstraps
         [bs_theta, bs_errors, bootstrap_options] = run_bootstrap_stage(theta_start, parameters, factors);
-        save(filename, 'bs_theta', 'bs_errors', 'bootstrap_options', '-append');
+        save(filename, 'bs_theta', 'bs_errors', '-append');
     elseif ~load_data
         bootstrap_options = struct();
     else
@@ -232,8 +232,8 @@ function options = create_grad_descent_options(parameters, factor)
     options.n_starts = 4;
     options.variance_scale = 2.0;
     options.use_parallel = true;
-    options.gradient_steps = fliplr(logspace(-2.8, -1.6, 4));
-    options.steps = fliplr([-0.01 0.01 0.02  0.05 0.15]);
+    options.gradient_steps = fliplr([0.01 0.02 0.05 0.1]);
+    options.steps = fliplr([0.002 0.01 0.02 0.05 0.15]);
     options.objective_function = @(theta) optimize_model(theta, parameters, factor);
     options.gradient_objective = options.objective_function;
     options.result_function = @(theta) run_model(parameters, theta);
