@@ -1,4 +1,4 @@
-function [bs_theta, bs_errors, bootstrap_options, cluster_info] = run_knn_cluster_bootstrap(theta_start, parameters, point_errors, base_gd_options, factor, group_size, n_bootstraps)
+function [bs_theta, bs_errors, bootstrap_options, cluster_info] = run_knn_cluster_bootstrap(theta_start, parameters, point_errors, base_gd_options, factor, group_size, n_bootstraps, bootstrap_info, progress_callback)
 %RUN_KNN_CLUSTER_BOOTSTRAP Cluster bootstrap using KNN groups in [lat, lon, error].
 
     if nargin < 7 || isempty(n_bootstraps)
@@ -6,6 +6,13 @@ function [bs_theta, bs_errors, bootstrap_options, cluster_info] = run_knn_cluste
     end
     if nargin < 6 || isempty(group_size)
         group_size = 10;
+    end
+    if nargin < 8
+        bootstrap_info = struct('type', 'knn_cluster', 'group_size', group_size, ...
+            'n_bootstraps', n_bootstraps);
+    end
+    if nargin < 9
+        progress_callback = [];
     end
 
     complete_dataset = parameters.dataset_idx;
@@ -19,8 +26,8 @@ function [bs_theta, bs_errors, bootstrap_options, cluster_info] = run_knn_cluste
     features = normalize_features(features);
     clusters = build_knn_clusters(features, group_size);
 
-    bs_theta = zeros(n_bootstraps, numel(theta_start));
-    bs_errors = zeros(n_bootstraps, 1);
+    bs_theta = NaN(n_bootstraps, numel(theta_start));
+    bs_errors = NaN(n_bootstraps, 1);
     bootstrap_options = cell(n_bootstraps, 1);
     seeds = randi(2^32, n_bootstraps, 1);
 
@@ -33,6 +40,9 @@ function [bs_theta, bs_errors, bootstrap_options, cluster_info] = run_knn_cluste
         bs_theta(i, :) = theta;
         bs_errors(i) = info.best_error;
         bootstrap_options{i} = gd_options;
+        if ~isempty(progress_callback)
+            progress_callback(bs_theta, bs_errors, bootstrap_info, i);
+        end
     end
 
     cluster_info = struct();

@@ -64,6 +64,7 @@ function state = fit_model(crop, layers, do_bootstraps, file_to_load, level_to_l
         all_params = get_loaded(loaded, 'all_params', {});
         bs_theta = get_loaded(loaded, 'bs_theta', []);
         bs_errors = get_loaded(loaded, 'bs_errors', []);
+        variance_info = get_loaded(loaded, 'variance_info', []);
 
         if ~isempty(level_to_load)
             level = level_to_load;
@@ -83,6 +84,7 @@ function state = fit_model(crop, layers, do_bootstraps, file_to_load, level_to_l
         all_params = {};
         bs_theta = [];
         bs_errors = [];
+        variance_info = [];
 
         save(filename, 'crop', 'number_of_averages', 'layers', 'filename');
     end
@@ -128,26 +130,37 @@ function state = fit_model(crop, layers, do_bootstraps, file_to_load, level_to_l
         gd_options = create_grad_descent_options(parameters, factors);
         [theta_optim, result, gd_info] = grad_descent(theta_start, parameters, gd_options);
         min_error = gd_info.best_error;
+        variance_info = compute_variance(theta_optim, parameters);
         all_params{end + 1} = gd_info;
         optimizer_options = gd_options;
         level = 5;
 
-        save(filename, 'theta_optim', 'min_error', 'all_params', 'optimizer_options', 'level', '-append');
+        save(filename, 'theta_optim', 'min_error', 'variance_info', 'all_params', 'optimizer_options', 'level', '-append');
     else
         result = run_model(parameters, theta_optim);
         optimizer_options = get_loaded(loaded, 'optimizer_options', struct());
+        if isempty(variance_info)
+            variance_info = compute_variance(theta_optim, parameters);
+            save(filename, 'variance_info', '-append');
+        end
     end
 
     if do_bootstraps
+        bootstrap_completed = 0;
+        save(filename, 'bootstrap_completed', '-append');
         [bs_theta, bs_errors, bootstrap_options, bootstrap_info] = ...
-            run_bootstrap_stage(theta_optim, parameters, result, factors, bootstrap_type, bootstrap_group_size, n_bootstraps);
-        save(filename, 'bs_theta', 'bs_errors', 'bootstrap_options', 'bootstrap_info', '-append');
+            run_bootstrap_stage(theta_optim, parameters, result, factors, bootstrap_type, ...
+            bootstrap_group_size, n_bootstraps, filename);
+        bootstrap_completed = n_bootstraps;
+        save(filename, 'bs_theta', 'bs_errors', 'bootstrap_options', 'bootstrap_info', 'bootstrap_completed', '-append');
     elseif ~load_data
         bootstrap_options = struct();
         bootstrap_info = struct();
+        bootstrap_completed = 0;
     else
         bootstrap_options = get_loaded(loaded, 'bootstrap_options', struct());
         bootstrap_info = get_loaded(loaded, 'bootstrap_info', struct());
+        bootstrap_completed = get_loaded(loaded, 'bootstrap_completed', 0);
     end
 
     runtime = toc;
@@ -168,9 +181,11 @@ function state = fit_model(crop, layers, do_bootstraps, file_to_load, level_to_l
     state.all_params = all_params;
     state.bs_theta = bs_theta;
     state.bs_errors = bs_errors;
+    state.variance_info = variance_info;
     state.optimizer_options = optimizer_options;
     state.bootstrap_options = bootstrap_options;
     state.bootstrap_info = bootstrap_info;
+    state.bootstrap_completed = bootstrap_completed;
     state.bootstrap_type = bootstrap_type;
     state.bootstrap_group_size = bootstrap_group_size;
     state.n_bootstraps = n_bootstraps;
@@ -260,25 +275,31 @@ function options = create_grad_descent_options(parameters, factor)
     options.debug = false;
 end
 
-function [bs_theta, bs_errors, bootstrap_options, bootstrap_info] = run_bootstrap_stage(theta_start, parameters, result, factor, bootstrap_type, bootstrap_group_size, n_bootstraps)
+function [bs_theta, bs_errors, bootstrap_options, bootstrap_info] = run_bootstrap_stage(theta_start, parameters, result, factor, bootstrap_type, bootstrap_group_size, n_bootstraps, filename)
     bootstrap_type = lower(string(bootstrap_type));
+    progress_callback = @(bs_theta, bs_errors, bootstrap_info, bootstrap_completed) ...
+        save_bootstrap_progress(filename, bs_theta, bs_errors, bootstrap_info, bootstrap_completed);
     if bootstrap_type == "iid"
-        [bs_theta, bs_errors, bootstrap_options] = run_iid_bootstrap_stage(theta_start, parameters, factor, n_bootstraps);
         bootstrap_info = struct('type', 'iid', 'group_size', NaN, 'n_bootstraps', n_bootstraps);
+        [bs_theta, bs_errors, bootstrap_options] = run_iid_bootstrap_stage( ...
+            theta_start, parameters, factor, n_bootstraps, bootstrap_info, progress_callback);
     elseif bootstrap_type == "knn_cluster"
         base_options = create_grad_descent_options(parameters, factor);
-        [bs_theta, bs_errors, bootstrap_options, cluster_info] = run_knn_cluster_bootstrap( ...
-            theta_start, parameters, result.errors, base_options, factor, bootstrap_group_size, n_bootstraps);
         bootstrap_info = struct('type', 'knn_cluster', 'group_size', bootstrap_group_size, ...
-            'n_bootstraps', n_bootstraps, 'cluster_info', cluster_info);
+            'n_bootstraps', n_bootstraps);
+        [bs_theta, bs_errors, bootstrap_options, cluster_info] = run_knn_cluster_bootstrap( ...
+            theta_start, parameters, result.errors, base_options, factor, bootstrap_group_size, ...
+            n_bootstraps, bootstrap_info, progress_callback);
+        bootstrap_info.cluster_info = cluster_info;
+        progress_callback(bs_theta, bs_errors, bootstrap_info, n_bootstraps);
     else
         error('Unknown bootstrap_type: %s. Use ''iid'' or ''knn_cluster''.', bootstrap_type);
     end
 end
 
-function [bs_theta, bs_errors, bootstrap_options] = run_iid_bootstrap_stage(theta_start, parameters, factor, n_bootstraps)
-    bs_theta = zeros(n_bootstraps, numel(theta_start));
-    bs_errors = zeros(n_bootstraps, 1);
+function [bs_theta, bs_errors, bootstrap_options] = run_iid_bootstrap_stage(theta_start, parameters, factor, n_bootstraps, bootstrap_info, progress_callback)
+    bs_theta = NaN(n_bootstraps, numel(theta_start));
+    bs_errors = NaN(n_bootstraps, 1);
     complete_dataset = parameters.dataset_idx;
     n = size(complete_dataset, 1);
     seeds = randi(2^32, n_bootstraps, 1);
@@ -294,6 +315,7 @@ function [bs_theta, bs_errors, bootstrap_options] = run_iid_bootstrap_stage(thet
         bs_theta(i, :) = theta;
         bs_errors(i) = info.best_error;
         bootstrap_options{i} = gd_options;
+        progress_callback(bs_theta, bs_errors, bootstrap_info, i);
     end
 end
 
@@ -337,4 +359,8 @@ function validate_loaded_config(loaded, crop, layers, filename)
     if loaded_crop ~= string(crop)
         error('Loaded file %s was created for crop %s, not %s.', filename, loaded_crop, string(crop));
     end
+end
+
+function save_bootstrap_progress(filename, bs_theta, bs_errors, bootstrap_info, bootstrap_completed)
+    save(filename, 'bs_theta', 'bs_errors', 'bootstrap_info', 'bootstrap_completed', '-append');
 end
