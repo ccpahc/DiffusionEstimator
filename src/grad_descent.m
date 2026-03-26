@@ -8,7 +8,7 @@ function [best_theta, best_result, info] = grad_descent(theta0, parameters, opti
     end
 
     theta0 = theta0(:)';
-    n_starts = get_opt(options, 'n_starts', 4);
+    n_starts = get_opt(options, 'n_starts', 6);
     variance_scale = get_opt(options, 'variance_scale', 2.0);
     use_parallel = get_opt(options, 'use_parallel', true);
     start_point_function = get_opt(options, 'start_point_function', []);

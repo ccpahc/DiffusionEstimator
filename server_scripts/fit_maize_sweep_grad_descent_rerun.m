@@ -10,13 +10,13 @@ addpath(fullfile(repo_root, 'src'));
 addpath(fullfile(repo_root, 'plotting_scripts'));
 
 layer_sets = {
-    {'av'}
-    {'av', 'sea'}
-    {'av', 'sea', 'asym'}
-    {'av', 'sea', 'hydro'}
-    {'av', 'sea', 'csi'}
-    {'av', 'sea', 'tmean'}
-    {'av', 'sea', 'prec'}
+    % {'av'}
+    % {'av', 'sea'}
+    {'av', 'asym', 'sea'}
+    {'av', 'hydro', 'sea'}
+    {'av', 'csi', 'sea'}
+    {'av', 'tmean', 'sea'}
+    {'av', 'prec', 'sea'}
 };
 
 for i = 1:numel(layer_sets)
