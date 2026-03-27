@@ -8,7 +8,7 @@ addpath(fullfile(repo_root, 'src'));
 
 set(0, 'defaulttextinterpreter', 'latex');
 
-database_file = fullfile(repo_root, 'generated_data', 'filename_database.mat');
+database_file = fullfile(repo_root, 'generated_data', 'sweep_grad_descent', 'filename_database.mat');
 if exist(database_file, 'file') ~= 2
     database = build_filename_database_impl(fullfile(repo_root, 'generated_data'), false);
     save(database_file, 'database');
@@ -140,19 +140,12 @@ end
 theta = fit.theta_optim(:);
 cov_theta = fit.variance_info.V_iid / size(fit.parameters.dataset_idx, 1);
 metric = @(th) sqrt(run_model(fit.parameters, th(:)').squared_error);
-grad = numerical_gradient(metric, theta);
-variance_metric = grad' * cov_theta * grad;
-se = sqrt(max(variance_metric, 0));
-end
+window_size = 0.1;
+[grad, hessian] = calculate_gradient_fit(metric, theta, [], window_size);
+grad = grad(:);
+hessian = squeeze(hessian);
 
-function grad = numerical_gradient(fun, theta)
-grad = zeros(size(theta));
-for j = 1:numel(theta)
-    step = 1e-2 * max(abs(theta(j)), 1);
-    theta_plus = theta;
-    theta_minus = theta;
-    theta_plus(j) = theta_plus(j) + step;
-    theta_minus(j) = theta_minus(j) - step;
-    grad(j) = (fun(theta_plus) - fun(theta_minus)) / (2 * step);
-end
+first_order_var = grad' * cov_theta * grad;
+second_order_var = 0.5 * trace(hessian * cov_theta * hessian * cov_theta);
+se = sqrt(max(first_order_var + second_order_var, 0));
 end

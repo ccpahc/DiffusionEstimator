@@ -6,9 +6,10 @@ repo_root = fileparts(script_dir);
 addpath(script_dir);
 addpath(fullfile(repo_root, 'src'));
 
-database_file = fullfile(repo_root, 'generated_data', 'filename_database.mat');
+database_file = fullfile(repo_root, 'generated_data','sweep_grad_descent', 'filename_database.mat');
+data_root = fullfile(repo_root, 'generated_data','sweep_grad_descent');
 if exist(database_file, 'file') ~= 2
-    database = build_filename_database_impl(repo_root);
+    database = build_filename_database_impl(data_root);
     save(database_file, 'database');
 end
 load(database_file, 'database');
