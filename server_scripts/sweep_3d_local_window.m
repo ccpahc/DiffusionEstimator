@@ -10,7 +10,7 @@ addpath(fullfile(repo_root, 'src'));
 addpath(fullfile(repo_root, 'plotting_scripts'));
 
 % Edit these to choose which fitted 3-parameter model to sweep around.
-crop = 'maize';
+crop = 'cobo';
 layers = {'av', 'asym', 'sea'};
 
 window_size = 0.2;
