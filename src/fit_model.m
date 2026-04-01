@@ -269,7 +269,7 @@ end
 
 function options = create_grad_descent_options(parameters, factor)
     options = struct();
-    options.n_starts = 4;
+    options.n_starts = 8;
     options.variance_scale = 2.0;
     options.use_parallel = true;
     options.gradient_steps = fliplr([0.01 0.02 0.05 0.1]);

@@ -10,8 +10,8 @@ addpath(fullfile(repo_root, 'src'));
 addpath(fullfile(repo_root, 'plotting_scripts'));
 
 layer_sets = {
-    % {'av'}
-    % {'av', 'sea'}
+    {'av'}
+    {'av', 'sea'}
     {'av', 'asym', 'sea'}
     {'av', 'hydro', 'sea'}
     {'av', 'csi', 'sea'}

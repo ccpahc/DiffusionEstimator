@@ -18,7 +18,7 @@ load(database_file, 'database');
 target_layers = {
     {'av'}
     {'sea'}
-    % {'asym', 'sea'}
+    {'asym', 'sea'}
     {'csi', 'sea'}
     {'hydro', 'sea'}
     {'prec', 'sea'}
@@ -47,7 +47,7 @@ f.Position = [100 100 800 180];
 tiledlayout(1, 3, 'Padding', 'none', 'TileSpacing', 'compact');
 
 cmap = slanCM('romao');
-x_errorbar = [-2.5 -1.5 -0.5 0.5 1.5 2.5 ] .* 0.135;
+x_errorbar = [-3 -2 -1 0 1 2 3] .* 0.115;
 
 for p = 1:3
     nexttile
